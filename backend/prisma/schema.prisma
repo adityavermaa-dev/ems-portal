@@ -12,24 +12,182 @@ datasource db {
   provider = "postgresql"
 }
 
+enum LeadStatus {
+  NEW
+  INTERESTED
+  NOT_INTERESTED
+  FOLLOW_UP
+  PAYMENT_PENDING
+  CONVERTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  SUCCESS
+}
+
 model Role {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
   users User[]
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  name          String
-  email         String   @unique
-  passwordHash  String
-  designation   String
-  isActive      Boolean  @default(true)
+  id           Int     @id @default(autoincrement())
+  name         String
+  email        String  @unique
+  passwordHash String
+  isActive     Boolean @default(true)
 
-  roleId        Int
-  role          Role     @relation(fields: [roleId], references: [id])
+  roleId Int
+  role   Role @relation(fields: [roleId], references: [id])
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  assignedLeads Lead[] @relation("AssignedLeads")
+
+  assignedTasks Task[] @relation("AssignedTasks")
+
+  createdTasks Task[] @relation("CreatedTasks")
+
+  attendance Attendance[]
+
+  notifications Notification[]
+
+  activityLogs ActivityLog[]
+
+  createdLeads Lead[] @relation("CreatedLeads")
+
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  createdFollowUps FollowUp[] @relation("CreatedFollowUps")
+}
+
+model Lead {
+  id Int @id @default(autoincrement())
+
+  name  String
+  email String?
+  phone String
+
+  status       LeadStatus @default(NEW)
+  source       String?
+  assignedTo   Int?
+  assignedUser User?      @relation("AssignedLeads", fields: [assignedTo], references: [id])
+
+  createdBy Int
+
+  creator User @relation("CreatedLeads", fields: [createdBy], references: [id])
+
+  followUps FollowUp[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FollowUp {
+  id Int @id @default(autoincrement())
+
+  leadId Int
+  lead   Lead @relation(fields: [leadId], references: [id])
+
+  notes String
+
+  followUpDate DateTime
+
+  nextFollowUpDate DateTime?
+
+  createdBy Int
+
+  creator User @relation("CreatedFollowUps", fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Task {
+  id Int @id @default(autoincrement())
+
+  title String
+
+  description String?
+
+  status TaskStatus @default(PENDING)
+
+  assignedTo Int
+
+  assignedUser User @relation("AssignedTasks", fields: [assignedTo], references: [id])
+
+  assignedBy Int
+
+  creator User @relation("CreatedTasks", fields: [assignedBy], references: [id])
+
+  dueDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  id Int @id @default(autoincrement())
+
+  userId Int
+
+  user User @relation(fields: [userId], references: [id])
+
+  date DateTime
+
+  status AttendanceStatus
+
+  checkIn DateTime?
+
+  checkOut DateTime?
+
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+
+  userId Int
+
+  user User @relation(fields: [userId], references: [id])
+
+  title String
+
+  message String
+
+  type NotificationType
+
+  isRead Boolean @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id Int @id @default(autoincrement())
+
+  userId Int
+
+  user User @relation(fields: [userId], references: [id])
+
+  action String
+
+  entityType String
+
+  entityId Int?
+
+  createdAt DateTime @default(now())
 }
