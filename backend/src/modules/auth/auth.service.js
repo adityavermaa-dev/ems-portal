@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const prisma = require("../../config/prisma");
-const generateToken = require("../../utils/jwt");
+const {generateToken} = require("../../utils/jwt");
 
 async function login(email,password) {
     
@@ -16,6 +16,10 @@ async function login(email,password) {
     if(!user){
         throw new Error("Invalid Credentials")
     };
+    
+    if(!user.isActive){
+        throw new Error("Account Disables")
+    }
 
     const isMatch = await bcrypt.compare(password,user.passwordHash);
 
@@ -27,7 +31,12 @@ async function login(email,password) {
 
     return {
         token,
-        user
+        user:{
+            id : user.id,
+            email : user.email,
+            name : user.name,
+            role : user.role.name
+        }
     };
 }
 
