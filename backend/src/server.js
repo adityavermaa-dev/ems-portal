@@ -1,5 +1,7 @@
+const http = require('http');
 const app = require('./app');
 const prisma = require('./config/prisma');
+const { initializeSocket } = require('./config/socket');
 const dotenv = require("dotenv");
 const path = require("path");
 
@@ -7,24 +9,43 @@ dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 const PORT = process.env.PORT || 9999;
 
-async function startServer(){
+async function startServer() {
     try {
         await prisma.$connect();
-        console.log("Database Connected");
+        console.log("✅ Database Connected");
 
-        app.listen(PORT, () => {
-            console.log(`Server is listen on ${PORT}`);
-        })
+        // Create HTTP server and attach Socket.IO
+        const httpServer = http.createServer(app);
+        const io = initializeSocket(httpServer);
+
+        // Store io instance on app for use in controllers
+        app.set('io', io);
+
+        httpServer.listen(PORT, () => {
+            console.log(`🚀 Server is listening on port ${PORT}`);
+            console.log(`📡 Socket.IO ready for real-time connections`);
+            console.log(`📋 API Endpoints:`);
+            console.log(`   Auth:          http://localhost:${PORT}/api/auth`);
+            console.log(`   Users:         http://localhost:${PORT}/api/users`);
+            console.log(`   Leads:         http://localhost:${PORT}/api/leads`);
+            console.log(`   Follow-Ups:    http://localhost:${PORT}/api/follow-ups`);
+            console.log(`   Tasks:         http://localhost:${PORT}/api/tasks`);
+            console.log(`   Attendance:    http://localhost:${PORT}/api/attendance`);
+            console.log(`   Messages:      http://localhost:${PORT}/api/messages`);
+            console.log(`   Notifications: http://localhost:${PORT}/api/notifications`);
+            console.log(`   Activity Logs: http://localhost:${PORT}/api/activity-logs`);
+        });
     } catch (error) {
-        console.log("Database connection failed"+" why? "+ error);
+        console.log("❌ Database connection failed: " + error);
         process.exit(1);
     }
 }
 
-process.on("SIGINT",async () => {
-    console.log("Database shutdown started");
+process.on("SIGINT", async () => {
+    console.log("\n🔄 Graceful shutdown initiated...");
     await prisma.$disconnect();
-    console.log("Database disconnection successful");
-})
+    console.log("✅ Database disconnected");
+    process.exit(0);
+});
 
 startServer();

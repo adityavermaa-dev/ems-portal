@@ -141,7 +141,7 @@ model Task {
   assignedBy Int
   creator    User @relation("CreatedTasks", fields: [assignedBy], references: [id])
 
-  dueDate                DateTime?
+  dueDate                DateTime
   overdueReasonSubmitted Boolean   @default(false)
   completedAt            DateTime?
 
@@ -175,6 +175,8 @@ model Attendance {
   checkOut DateTime?
 
   createdAt DateTime @default(now())
+
+  @@unique([userId, date])
 }
 
 model Message {
@@ -224,6 +226,8 @@ model ActivityLog {
   entityType String
 
   entityId Int?
+
+  details String?
 
   createdAt DateTime @default(now())
 }
