@@ -57,23 +57,32 @@ model User {
   roleId Int
   role   Role @relation(fields: [roleId], references: [id])
 
+  // Lead Relations
   assignedLeads Lead[] @relation("AssignedLeads")
+  createdLeads  Lead[] @relation("CreatedLeads")
 
+  // Task Relations
   assignedTasks Task[] @relation("AssignedTasks")
+  createdTasks  Task[] @relation("CreatedTasks")
 
-  createdTasks Task[] @relation("CreatedTasks")
+  // FollowUp Relations
+  createdFollowUps FollowUp[] @relation("CreatedFollowUps")
 
+  // Attendance
   attendance Attendance[]
 
+  // Messages
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
+  // Notifications
   notifications Notification[]
 
+  // Audit Logs
   activityLogs ActivityLog[]
 
-  createdLeads Lead[] @relation("CreatedLeads")
-
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  createdFollowUps FollowUp[] @relation("CreatedFollowUps")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Lead {
@@ -83,14 +92,15 @@ model Lead {
   email String?
   phone String
 
-  status       LeadStatus @default(NEW)
-  source       String?
+  source String?
+
+  status LeadStatus @default(NEW)
+
   assignedTo   Int?
-  assignedUser User?      @relation("AssignedLeads", fields: [assignedTo], references: [id])
+  assignedUser User? @relation("AssignedLeads", fields: [assignedTo], references: [id])
 
   createdBy Int
-
-  creator User @relation("CreatedLeads", fields: [createdBy], references: [id])
+  creator   User @relation("CreatedLeads", fields: [createdBy], references: [id])
 
   followUps FollowUp[]
 
@@ -111,8 +121,7 @@ model FollowUp {
   nextFollowUpDate DateTime?
 
   createdBy Int
-
-  creator User @relation("CreatedFollowUps", fields: [createdBy], references: [id])
+  creator   User @relation("CreatedFollowUps", fields: [createdBy], references: [id])
 
   createdAt DateTime @default(now())
 }
@@ -126,15 +135,19 @@ model Task {
 
   status TaskStatus @default(PENDING)
 
-  assignedTo Int
-
+  assignedTo   Int
   assignedUser User @relation("AssignedTasks", fields: [assignedTo], references: [id])
 
   assignedBy Int
+  creator    User @relation("CreatedTasks", fields: [assignedBy], references: [id])
 
-  creator User @relation("CreatedTasks", fields: [assignedBy], references: [id])
+  dueDate                DateTime?
+  overdueReasonSubmitted Boolean   @default(false)
+  completedAt            DateTime?
 
-  dueDate DateTime?
+  reasonForDelay String?
+
+  isOverdue Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -144,12 +157,18 @@ model Attendance {
   id Int @id @default(autoincrement())
 
   userId Int
+  user   User @relation(fields: [userId], references: [id])
 
-  user User @relation(fields: [userId], references: [id])
+  date           DateTime
+  attendanceType String?
+  status         AttendanceStatus
 
-  date DateTime
+  latitude  Float?
+  longitude Float?
 
-  status AttendanceStatus
+  isInsideOffice Boolean?
+
+  officeDistanceMeters Float?
 
   checkIn DateTime?
 
@@ -158,12 +177,30 @@ model Attendance {
   createdAt DateTime @default(now())
 }
 
+model Message {
+  id Int @id @default(autoincrement())
+
+  senderId   Int
+  receiverId Int
+
+  sender User @relation("SentMessages", fields: [senderId], references: [id])
+
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  content String
+
+  isRead Boolean @default(false)
+
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+}
+
 model Notification {
   id Int @id @default(autoincrement())
 
   userId Int
-
-  user User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 
   title String
 
@@ -180,8 +217,7 @@ model ActivityLog {
   id Int @id @default(autoincrement())
 
   userId Int
-
-  user User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 
   action String
 

@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "validate-prisma-schema",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"prisma",
+				"format"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "test"
+		}
+	]
+}
