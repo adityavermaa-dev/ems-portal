@@ -2,6 +2,8 @@ const prisma = require('../../config/prisma');
 const { logActivity } = require('../../utils/activityLogger');
 const { createNotification } = require('../../utils/notificationHelper');
 const { validateCreateLead, validateLeadStatus } = require('../../utils/validators/lead.validator');
+const fs = require('fs');
+const csv = require('csv-parser');
 
 async function createLead(data, createdBy) {
     validateCreateLead(data);
@@ -34,6 +36,49 @@ async function createLead(data, createdBy) {
         await logActivity(createdBy, 'CREATE_LEAD', 'Lead', lead.id, null, tx);
 
         return lead;
+    });
+}
+
+async function importLeads(filePath, createdBy) {
+    const results = [];
+    return new Promise((resolve, reject) => {
+        fs.createReadStream(filePath)
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', async () => {
+                try {
+                    let importedCount = 0;
+                    for (const row of results) {
+                        const name = row.name || row.Name;
+                        const phone = String(row.phone || row.Phone || '').trim();
+                        const email = row.email || row.Email || null;
+                        const source = row.source || row.Source || null;
+                        
+                        if (!name || !phone) continue;
+                        
+                        const existingLead = await prisma.lead.findUnique({ where: { phone } });
+                        if (!existingLead) {
+                            await prisma.lead.create({
+                                data: { name, phone, email, source, status: 'NEW', createdBy }
+                            });
+                            importedCount++;
+                        }
+                    }
+                    fs.unlinkSync(filePath);
+                    
+                    if (importedCount > 0) {
+                        await logActivity(createdBy, 'IMPORT_LEADS', 'Lead', null, `Imported ${importedCount} leads from CSV`);
+                    }
+                    resolve({ importedCount });
+                } catch (err) {
+                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                    reject(err);
+                }
+            })
+            .on('error', (err) => {
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                reject(err);
+            });
     });
 }
 
@@ -252,6 +297,7 @@ async function updateLeadStatus(id, status, userId, role) {
 
 module.exports = {
     createLead,
+    importLeads,
     getLeads,
     getLeadById,
     updateLead,

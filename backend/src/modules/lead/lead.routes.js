@@ -3,11 +3,17 @@ const router = express.Router();
 const authMiddleware = require('../../middlewares/auth.middleware');
 const authorize = require('../../middlewares/role.middleware');
 const leadController = require('./lead.controller');
+const multer = require('multer');
+
+const upload = multer({ dest: 'uploads/' });
 
 router.use(authMiddleware);
 
 // Create lead - SUPER_ADMIN, HR only
 router.post('/', authorize('SUPER_ADMIN', 'HR'), leadController.createLead);
+
+// Import leads via CSV
+router.post('/import', authorize('SUPER_ADMIN', 'HR'), upload.single('file'), leadController.importLeads);
 
 // Get all leads - All authenticated (filtered by role in service)
 router.get('/', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), leadController.getLeads);

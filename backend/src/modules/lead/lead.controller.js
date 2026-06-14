@@ -13,6 +13,18 @@ async function createLead(req, res) {
     }
 }
 
+async function importLeads(req, res) {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No CSV file uploaded' });
+        }
+        const result = await leadService.importLeads(req.file.path, req.user.userId);
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+}
+
 async function getLeads(req, res) {
     try {
         const result = await leadService.getLeads(req.user.userId, req.user.role, req.query);
@@ -69,6 +81,7 @@ async function updateLeadStatus(req, res) {
 
 module.exports = {
     createLead,
+    importLeads,
     getLeads,
     getLeadById,
     updateLead,
