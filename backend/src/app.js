@@ -20,6 +20,7 @@ const attendanceRoutes = require("./modules/attendance/attendance.routes");
 const messageRoutes = require("./modules/message/message.routes");
 const notificationRoutes = require("./modules/notification/notification.routes");
 const activityLogRoutes = require("./modules/activityLog/activityLog.routes");
+const analyticsRoutes = require("./modules/analytics/analytics.routes");
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
@@ -42,6 +43,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // Health check
 app.get("/", (req, res) => {

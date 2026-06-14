@@ -62,4 +62,5 @@ export const api = {
   sendMessage: (body) => request("/api/messages/send", { method: "POST", body }),
   markConversationRead: (id) => request(`/api/messages/conversation/${id}/read`, { method: "PATCH" }),
   activityLogs: (path = "/api/activity-logs/my", params) => request(`${path}${buildQuery(params)}`),
+  analytics: () => request("/api/analytics"),
 };

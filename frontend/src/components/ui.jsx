@@ -87,10 +87,13 @@ export function ErrorState({ error, onRetry }) {
   );
 }
 
-export function Metric({ label, value, detail, tone = "default" }) {
+export function Metric({ label, value, detail, tone = "default", icon: Icon }) {
   return (
     <div className={cx("metric", tone)}>
-      <span>{label}</span>
+      <div className="metric-header">
+        {Icon && <Icon size={18} />}
+        <span>{label}</span>
+      </div>
       <strong>{value}</strong>
       <small>{detail}</small>
     </div>

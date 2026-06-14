@@ -4,6 +4,8 @@ import { useAuthStore } from "../store/useAuthStore";
 import { titleCase, cx } from "../utils/helpers";
 import { EMPLOYEE_ROLES } from "../utils/constants";
 import { useSocket } from "../hooks/useSocket";
+import { Bell } from "lucide-react";
+import { api } from "../services/api";
 
 export function AppShell() {
   const { user, logout } = useAuthStore();
@@ -11,6 +13,11 @@ export function AppShell() {
   const location = useLocation();
   const socket = useSocket();
   const [notice, setNotice] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    api.unreadCount().then(res => setUnreadCount(res.unreadCount || 0)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (notice) {
@@ -27,6 +34,7 @@ export function AppShell() {
     });
 
     socket.on('new_notification', (notif) => {
+      setUnreadCount(prev => prev + 1);
       setNotice(notif.message);
     });
 
@@ -44,6 +52,7 @@ export function AppShell() {
 
   const navigation = [
     ["/dashboard", "Dashboard"],
+    ...(isAdmin ? [["/analytics", "Analytics"]] : []),
     ["/leads", "Leads"],
     ["/followups", "Follow-Ups"],
     ["/tasks", "Tasks"],
@@ -90,6 +99,14 @@ export function AppShell() {
           </div>
           <div className="topbar-actions">
             {notice && <span className="toast">{notice}</span>}
+            <div className="notification-bell" onClick={() => navigate("/notifications")} style={{ position: 'relative', cursor: 'pointer', padding: '8px' }}>
+              <Bell size={20} color="#53636e" />
+              {unreadCount > 0 && (
+                <span style={{ position: 'absolute', top: 0, right: 0, background: '#e11d48', color: 'white', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '99px', fontWeight: 'bold' }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </div>
             <button className="secondary" onClick={handleLogout}>
               Logout
             </button>

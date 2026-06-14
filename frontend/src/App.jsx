@@ -6,6 +6,7 @@ import { Loading } from "./components/ui";
 import { AppShell } from "./layouts/AppShell";
 
 const Dashboard = React.lazy(() => import("./pages/Dashboard").then(m => ({ default: m.Dashboard })));
+const Analytics = React.lazy(() => import("./pages/Analytics").then(m => ({ default: m.default })));
 const Users = React.lazy(() => import("./pages/Users").then(m => ({ default: m.Users })));
 const Leads = React.lazy(() => import("./pages/Leads").then(m => ({ default: m.Leads })));
 const FollowUps = React.lazy(() => import("./pages/FollowUps").then(m => ({ default: m.FollowUps })));
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/" element={<AppShell />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="analytics" element={<Analytics />} />
           <Route path="users" element={<Users />} />
           <Route path="leads" element={<Leads />} />
           <Route path="followups" element={<FollowUps />} />
