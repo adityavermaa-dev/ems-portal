@@ -1,7 +1,10 @@
 const prisma = require('../../config/prisma');
 
 async function sendMessage(senderId, receiverId, content) {
-    // Verify receiver exists
+    if (!content?.trim()) {
+        throw new Error('Message content cannot be empty');
+    }
+
     const receiver = await prisma.user.findUnique({
         where: { id: Number(receiverId) }
     });
@@ -22,7 +25,7 @@ async function sendMessage(senderId, receiverId, content) {
         data: {
             senderId,
             receiverId: Number(receiverId),
-            content
+            content: content.trim()
         },
         include: {
             sender: { select: { id: true, name: true, email: true } },
@@ -71,7 +74,6 @@ async function getConversation(userId, otherUserId, query = {}) {
 }
 
 async function getConversations(userId) {
-    // Get all unique conversations with latest message
     const sentMessages = await prisma.message.findMany({
         where: { senderId: userId },
         select: { receiverId: true },
@@ -84,12 +86,10 @@ async function getConversations(userId) {
         distinct: ['senderId']
     });
 
-    // Collect unique user IDs
     const userIds = new Set();
     sentMessages.forEach(m => userIds.add(m.receiverId));
     receivedMessages.forEach(m => userIds.add(m.senderId));
 
-    // For each unique user, get the latest message and unread count
     const conversations = [];
 
     for (const otherUserId of userIds) {
@@ -126,7 +126,6 @@ async function getConversations(userId) {
         });
     }
 
-    // Sort by latest message timestamp
     conversations.sort((a, b) => {
         const aTime = a.lastMessage?.createdAt || 0;
         const bTime = b.lastMessage?.createdAt || 0;

@@ -4,8 +4,12 @@ const prisma = require('./config/prisma');
 const { initializeSocket } = require('./config/socket');
 const dotenv = require("dotenv");
 const path = require("path");
+const { validateEnv } = require("./config/env.validator");
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
+
+// Validate required environment variables before starting
+validateEnv();
 
 const PORT = process.env.PORT || 9999;
 

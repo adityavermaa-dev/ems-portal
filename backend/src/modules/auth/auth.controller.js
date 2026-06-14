@@ -1,25 +1,17 @@
 const authService = require("./auth.service");
-const { logActivity } = require("../../utils/activityLogger");
 
 async function login(req, res) {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: "Email and password are required" });
-        }
-
         const result = await authService.login(email, password);
 
         res.cookie("accessToken", result.token, {
             httpOnly: true,
-            secure: false,
+            secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
-
-        // Log login activity
-        await logActivity(result.user.id, 'LOGIN', 'User', result.user.id);
 
         res.status(200).json({ success: true, user: result.user });
 
@@ -28,13 +20,12 @@ async function login(req, res) {
     }
 }
 
-function logout(req, res) {
-    // Log logout activity if user info is available
+async function logout(req, res) {
     if (req.cookies.accessToken) {
         try {
             const { verifyToken } = require("../../utils/jwt");
             const decoded = verifyToken(req.cookies.accessToken);
-            logActivity(decoded.userId, 'LOGOUT', 'User', decoded.userId);
+            await authService.logout(decoded.userId);
         } catch (e) {
             // Token may be expired, still allow logout
         }

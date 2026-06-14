@@ -1,14 +1,13 @@
 const messageService = require('./message.service');
-const { logActivity } = require('../../utils/activityLogger');
 
 async function sendMessage(req, res) {
     try {
         const { receiverId, content } = req.body;
 
-        if (!receiverId || !content) {
+        if (!receiverId) {
             return res.status(400).json({
                 success: false,
-                message: 'receiverId and content are required'
+                message: 'receiverId is required'
             });
         }
 
@@ -18,9 +17,6 @@ async function sendMessage(req, res) {
             content
         );
 
-        await logActivity(req.user.userId, 'SEND_MESSAGE', 'Message', message.id);
-
-        // Emit via Socket.IO for real-time delivery
         const io = req.app.get('io');
         if (io) {
             io.to(`user_${receiverId}`).emit('new_message', message);
@@ -61,7 +57,6 @@ async function markAsRead(req, res) {
             req.user.userId
         );
 
-        // Notify sender that message was read
         const io = req.app.get('io');
         if (io) {
             io.to(`user_${message.senderId}`).emit('message_read', {
@@ -83,7 +78,6 @@ async function markConversationAsRead(req, res) {
             req.params.userId
         );
 
-        // Notify sender that messages were read
         const io = req.app.get('io');
         if (io) {
             io.to(`user_${req.params.userId}`).emit('messages_read', {

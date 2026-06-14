@@ -1,12 +1,12 @@
 const prisma = require('../../config/prisma');
 const { isInsideOffice } = require('../../utils/gps');
+const { validateGps } = require('../../utils/validators/attendance.validator');
+const { logActivity } = require('../../utils/activityLogger');
+const { createNotification } = require('../../utils/notificationHelper');
 
-async function checkIn(userId, latitude, longitude) {
-    if (latitude === undefined || longitude === undefined) {
-        throw new Error('Latitude and longitude are required');
-    }
+async function checkIn(userId, latitude, longitude, io) {
+    validateGps(latitude, longitude);
 
-    // Check if already checked in today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -15,10 +15,7 @@ async function checkIn(userId, latitude, longitude) {
     const existing = await prisma.attendance.findFirst({
         where: {
             userId,
-            date: {
-                gte: today,
-                lt: tomorrow
-            }
+            date: { gte: today, lt: tomorrow }
         }
     });
 
@@ -26,37 +23,65 @@ async function checkIn(userId, latitude, longitude) {
         throw new Error('Already checked in today');
     }
 
-    // Calculate GPS distance
     const gpsResult = isInsideOffice(latitude, longitude);
 
-    const attendance = await prisma.attendance.create({
-        data: {
-            userId,
-            date: new Date(),
-            status: gpsResult.isInside ? 'PRESENT' : 'PRESENT',
-            attendanceType: 'GPS',
-            latitude,
-            longitude,
-            isInsideOffice: gpsResult.isInside,
-            officeDistanceMeters: gpsResult.distance,
-            checkIn: new Date()
-        },
-        include: {
-            user: { select: { id: true, name: true, email: true } }
-        }
-    });
+    return prisma.$transaction(async (tx) => {
+        const attendance = await tx.attendance.create({
+            data: {
+                userId,
+                date: new Date(),
+                status: 'PRESENT',
+                attendanceType: 'GPS',
+                latitude: Number(latitude),
+                longitude: Number(longitude),
+                isInsideOffice: gpsResult.isInside,
+                officeDistanceMeters: gpsResult.distance,
+                checkIn: new Date()
+            },
+            include: {
+                user: { select: { id: true, name: true, email: true } }
+            }
+        });
 
-    return {
-        ...attendance,
-        gpsInfo: {
-            distanceFromOffice: `${gpsResult.distance} meters`,
-            isInsideOffice: gpsResult.isInside
+        const promises = [
+            logActivity(userId, 'CHECK_IN', 'Attendance', attendance.id, null, tx)
+        ];
+
+        if (!gpsResult.isInside) {
+            const hrUsers = await tx.user.findMany({
+                where: {
+                    role: { name: { in: ['SUPER_ADMIN', 'HR'] } },
+                    isActive: true
+                }
+            });
+
+            for (const hr of hrUsers) {
+                promises.push(
+                    createNotification(
+                        hr.id,
+                        'Outside Office Check-In',
+                        `Employee checked in from outside office (${gpsResult.distance}m away).`,
+                        'WARNING',
+                        io,
+                        tx
+                    )
+                );
+            }
         }
-    };
+
+        await Promise.all(promises);
+
+        return {
+            ...attendance,
+            gpsInfo: {
+                distanceFromOffice: `${gpsResult.distance} meters`,
+                isInsideOffice: gpsResult.isInside
+            }
+        };
+    });
 }
 
 async function checkOut(userId, latitude, longitude) {
-    // Find today's check-in
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -65,10 +90,7 @@ async function checkOut(userId, latitude, longitude) {
     const attendance = await prisma.attendance.findFirst({
         where: {
             userId,
-            date: {
-                gte: today,
-                lt: tomorrow
-            }
+            date: { gte: today, lt: tomorrow }
         }
     });
 
@@ -80,22 +102,22 @@ async function checkOut(userId, latitude, longitude) {
         throw new Error('Already checked out today');
     }
 
-    const updateData = {
-        checkOut: new Date()
-    };
-
-    // Update GPS data if provided during check-out
     if (latitude !== undefined && longitude !== undefined) {
-        const gpsResult = isInsideOffice(latitude, longitude);
-        // We don't overwrite check-in GPS, just record check-out time
+        validateGps(latitude, longitude);
     }
 
-    return prisma.attendance.update({
-        where: { id: attendance.id },
-        data: updateData,
-        include: {
-            user: { select: { id: true, name: true, email: true } }
-        }
+    return prisma.$transaction(async (tx) => {
+        const updatedAttendance = await tx.attendance.update({
+            where: { id: attendance.id },
+            data: { checkOut: new Date() },
+            include: {
+                user: { select: { id: true, name: true, email: true } }
+            }
+        });
+
+        await logActivity(userId, 'CHECK_OUT', 'Attendance', updatedAttendance.id, null, tx);
+
+        return updatedAttendance;
     });
 }
 

@@ -1,8 +1,8 @@
-const prisma = require('../config/prisma');
+const defaultPrisma = require('../config/prisma');
 
-async function logActivity(userId, action, entityType, entityId = null, details = null) {
+async function logActivity(userId, action, entityType, entityId = null, details = null, tx = defaultPrisma) {
     try {
-        await prisma.activityLog.create({
+        await tx.activityLog.create({
             data: {
                 userId,
                 action,

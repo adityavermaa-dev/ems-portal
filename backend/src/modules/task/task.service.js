@@ -1,7 +1,11 @@
 const prisma = require('../../config/prisma');
+const { logActivity } = require('../../utils/activityLogger');
+const { createNotification } = require('../../utils/notificationHelper');
+const { validateCreateTask, validateTaskStatus, validateOverdueReason } = require('../../utils/validators/task.validator');
 
-async function createTask(data, assignedBy) {
-    // Verify assignee exists and is active
+async function createTask(data, assignedBy, io) {
+    validateCreateTask(data);
+
     const assignee = await prisma.user.findUnique({
         where: { id: Number(data.assignedTo) },
         include: { role: true }
@@ -15,32 +19,41 @@ async function createTask(data, assignedBy) {
         throw new Error('Cannot assign task to inactive user');
     }
 
-    if (!data.dueDate) {
-        throw new Error('Due date is mandatory');
-    }
+    return prisma.$transaction(async (tx) => {
+        const task = await tx.task.create({
+            data: {
+                title: data.title,
+                description: data.description || null,
+                assignedTo: Number(data.assignedTo),
+                assignedBy,
+                dueDate: new Date(data.dueDate),
+                status: 'PENDING'
+            },
+            include: {
+                assignedUser: { select: { id: true, name: true, email: true } },
+                creator: { select: { id: true, name: true, email: true } }
+            }
+        });
 
-    const task = await prisma.task.create({
-        data: {
-            title: data.title,
-            description: data.description || null,
-            assignedTo: Number(data.assignedTo),
-            assignedBy,
-            dueDate: new Date(data.dueDate),
-            status: 'PENDING'
-        },
-        include: {
-            assignedUser: { select: { id: true, name: true, email: true } },
-            creator: { select: { id: true, name: true, email: true } }
-        }
+        await Promise.all([
+            logActivity(assignedBy, 'CREATE_TASK', 'Task', task.id, null, tx),
+            createNotification(
+                Number(data.assignedTo),
+                'New Task Assigned',
+                `You have been assigned a new task: "${task.title}". Due: ${new Date(task.dueDate).toLocaleDateString()}.`,
+                'INFO',
+                io,
+                tx
+            )
+        ]);
+
+        return task;
     });
-
-    return task;
 }
 
 async function getTasks(userId, role, query = {}) {
     const where = {};
 
-    // BDE/TELESALES only see their assigned tasks
     if (role === 'BDE' || role === 'TELESALES') {
         where.assignedTo = userId;
     }
@@ -75,7 +88,6 @@ async function getTasks(userId, role, query = {}) {
         prisma.task.count({ where })
     ]);
 
-    // Check and mark overdue tasks
     const now = new Date();
     const updatedTasks = tasks.map(task => {
         if (task.status !== 'COMPLETED' && task.dueDate && new Date(task.dueDate) < now) {
@@ -108,7 +120,6 @@ async function getTaskById(id, userId, role) {
         throw new Error('Task not found');
     }
 
-    // BDE/TELESALES can only see their assigned tasks
     if ((role === 'BDE' || role === 'TELESALES') && task.assignedTo !== userId) {
         throw new Error('Access denied: Task not assigned to you');
     }
@@ -116,7 +127,9 @@ async function getTaskById(id, userId, role) {
     return task;
 }
 
-async function updateTaskStatus(id, status, userId, role) {
+async function updateTaskStatus(id, status, userId, role, io) {
+    validateTaskStatus(status);
+
     const task = await prisma.task.findUnique({
         where: { id: Number(id) }
     });
@@ -125,7 +138,6 @@ async function updateTaskStatus(id, status, userId, role) {
         throw new Error('Task not found');
     }
 
-    // BDE/TELESALES can only update their own tasks
     if ((role === 'BDE' || role === 'TELESALES') && task.assignedTo !== userId) {
         throw new Error('Access denied: Task not assigned to you');
     }
@@ -134,28 +146,47 @@ async function updateTaskStatus(id, status, userId, role) {
 
     if (status === 'COMPLETED') {
         updateData.completedAt = new Date();
-
-        // Check if overdue
         if (task.dueDate && new Date() > new Date(task.dueDate)) {
             updateData.isOverdue = true;
         }
     }
 
-    if (status === 'IN_PROGRESS' && task.status === 'PENDING') {
-        // Valid transition
-    }
+    return prisma.$transaction(async (tx) => {
+        const updatedTask = await tx.task.update({
+            where: { id: Number(id) },
+            data: updateData,
+            include: {
+                assignedUser: { select: { id: true, name: true, email: true } },
+                creator: { select: { id: true, name: true, email: true } }
+            }
+        });
 
-    return prisma.task.update({
-        where: { id: Number(id) },
-        data: updateData,
-        include: {
-            assignedUser: { select: { id: true, name: true, email: true } },
-            creator: { select: { id: true, name: true, email: true } }
+        const promises = [];
+
+        promises.push(logActivity(userId, 'UPDATE_TASK_STATUS', 'Task', updatedTask.id, null, tx));
+
+        if (task.assignedBy !== userId) {
+            promises.push(
+                createNotification(
+                    task.assignedBy,
+                    'Task Status Updated',
+                    `Task "${task.title}" has been marked as ${status}.`,
+                    status === 'COMPLETED' ? 'SUCCESS' : 'INFO',
+                    io,
+                    tx
+                )
+            );
         }
+
+        await Promise.all(promises);
+
+        return updatedTask;
     });
 }
 
-async function submitOverdueReason(id, reason, userId) {
+async function submitOverdueReason(id, reason, userId, io) {
+    validateOverdueReason(reason);
+
     const task = await prisma.task.findUnique({
         where: { id: Number(id) }
     });
@@ -172,16 +203,32 @@ async function submitOverdueReason(id, reason, userId) {
         throw new Error('Task is not overdue');
     }
 
-    return prisma.task.update({
-        where: { id: Number(id) },
-        data: {
-            reasonForDelay: reason,
-            overdueReasonSubmitted: true
-        },
-        include: {
-            assignedUser: { select: { id: true, name: true, email: true } },
-            creator: { select: { id: true, name: true, email: true } }
-        }
+    return prisma.$transaction(async (tx) => {
+        const updatedTask = await tx.task.update({
+            where: { id: Number(id) },
+            data: {
+                reasonForDelay: reason,
+                overdueReasonSubmitted: true
+            },
+            include: {
+                assignedUser: { select: { id: true, name: true, email: true } },
+                creator: { select: { id: true, name: true, email: true } }
+            }
+        });
+
+        await Promise.all([
+            logActivity(userId, 'SUBMIT_OVERDUE_REASON', 'Task', updatedTask.id, null, tx),
+            createNotification(
+                task.assignedBy,
+                'Overdue Reason Submitted',
+                `Overdue reason submitted for task "${task.title}": ${reason}`,
+                'WARNING',
+                io,
+                tx
+            )
+        ]);
+
+        return updatedTask;
     });
 }
 

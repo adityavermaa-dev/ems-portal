@@ -1,8 +1,8 @@
-const prisma = require('../config/prisma');
+const defaultPrisma = require('../config/prisma');
 
-async function createNotification(userId, title, message, type = 'INFO', io = null) {
+async function createNotification(userId, title, message, type = 'INFO', io = null, tx = defaultPrisma) {
     try {
-        const notification = await prisma.notification.create({
+        const notification = await tx.notification.create({
             data: {
                 userId,
                 title,

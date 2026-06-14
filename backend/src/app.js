@@ -4,9 +4,11 @@ const dotenv = require("dotenv");
 const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
 
 // Middleware imports
 const authMiddleware = require("./middlewares/auth.middleware");
+const errorHandler = require("./middlewares/errorHandler.middleware");
 
 // Route imports
 const authRoutes = require("./modules/auth/auth.route");
@@ -22,6 +24,7 @@ const activityLogRoutes = require("./modules/activityLog/activityLog.routes");
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 // Global Middleware
+app.use(helmet());
 app.use(cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true
@@ -71,9 +74,6 @@ app.use((req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
-    console.error("Unhandled Error:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
-});
+app.use(errorHandler);
 
 module.exports = app;

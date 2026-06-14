@@ -1,47 +1,16 @@
 const attendanceService = require('./attendance.service');
-const { logActivity } = require('../../utils/activityLogger');
-const { createNotification } = require('../../utils/notificationHelper');
-const prisma = require('../../config/prisma');
 
 async function checkIn(req, res) {
     try {
         const { latitude, longitude } = req.body;
 
-        if (latitude === undefined || longitude === undefined) {
-            return res.status(400).json({
-                success: false,
-                message: 'Latitude and longitude are required'
-            });
-        }
-
+        const io = req.app.get('io');
         const attendance = await attendanceService.checkIn(
             req.user.userId,
-            parseFloat(latitude),
-            parseFloat(longitude)
+            latitude,
+            longitude,
+            io
         );
-
-        await logActivity(req.user.userId, 'CHECK_IN', 'Attendance', attendance.id);
-
-        // If outside office, notify HR users
-        if (!attendance.gpsInfo.isInsideOffice) {
-            const io = req.app.get('io');
-            const hrUsers = await prisma.user.findMany({
-                where: {
-                    role: { name: { in: ['SUPER_ADMIN', 'HR'] } },
-                    isActive: true
-                }
-            });
-
-            for (const hr of hrUsers) {
-                await createNotification(
-                    hr.id,
-                    'Outside Office Check-In',
-                    `Employee checked in from outside office (${attendance.gpsInfo.distanceFromOffice} away).`,
-                    'WARNING',
-                    io
-                );
-            }
-        }
 
         res.status(201).json({ success: true, data: attendance });
     } catch (error) {
@@ -55,11 +24,9 @@ async function checkOut(req, res) {
 
         const attendance = await attendanceService.checkOut(
             req.user.userId,
-            latitude ? parseFloat(latitude) : undefined,
-            longitude ? parseFloat(longitude) : undefined
+            latitude,
+            longitude
         );
-
-        await logActivity(req.user.userId, 'CHECK_OUT', 'Attendance', attendance.id);
 
         res.json({ success: true, data: attendance });
     } catch (error) {

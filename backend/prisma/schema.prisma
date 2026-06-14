@@ -90,7 +90,7 @@ model Lead {
 
   name  String
   email String?
-  phone String
+  phone String @unique
 
   source String?
 
@@ -98,6 +98,10 @@ model Lead {
 
   assignedTo   Int?
   assignedUser User? @relation("AssignedLeads", fields: [assignedTo], references: [id])
+  assignedAt   DateTime?
+
+  firstContactedAt DateTime?
+  lastContactedAt  DateTime?
 
   createdBy Int
   creator   User @relation("CreatedLeads", fields: [createdBy], references: [id])
@@ -211,6 +215,8 @@ model Notification {
   type NotificationType
 
   isRead Boolean @default(false)
+
+  expiresAt DateTime?
 
   createdAt DateTime @default(now())
 }

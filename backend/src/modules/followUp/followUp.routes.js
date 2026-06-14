@@ -12,6 +12,9 @@ router.post('/', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpCon
 // Get upcoming follow-ups
 router.get('/upcoming', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.getUpcomingFollowUps);
 
+// Get overdue follow-ups
+router.get('/overdue', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.getOverdueFollowUps);
+
 // Get follow-ups by lead
 router.get('/lead/:leadId', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.getFollowUpsByLead);
 
