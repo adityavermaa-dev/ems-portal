@@ -6,7 +6,7 @@ import { titleCase, countBy, downloadCsv, formatDate } from "../utils/helpers";
 import { LEAD_STATUSES, TASK_STATUSES } from "../utils/constants";
 import { Loading, ErrorState, Metric, PanelHeader, FollowUpList, EmptyState } from "../components/ui";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
-import { Users, UserCheck, PhoneCall, TrendingUp, AlertCircle, CheckCircle, Clock, Calendar, Bell } from "lucide-react";
+import { Users, UserCheck, PhoneCall, TrendingUp, AlertCircle, CheckCircle, Clock, Calendar, Bell, Download } from "lucide-react";
 
 export function Dashboard() {
   const { user, isAdmin } = useOutletContext();
@@ -39,6 +39,7 @@ export function Dashboard() {
   const tasks = data.tasks.tasks || [];
   const records = data.attendance.records || [];
   const logs = data.activityLog.logs || [];
+  const users = data.users || [];
   
   const leadCounts = countBy(leads, (lead) => lead.status);
   
@@ -49,7 +50,7 @@ export function Dashboard() {
   const dueTodayTasks = tasks.filter((t) => t.status !== "COMPLETED" && t.dueDate && t.dueDate.startsWith(todayStr)).length;
   const completedTodayTasks = tasks.filter((t) => t.status === "COMPLETED" && t.updatedAt && t.updatedAt.startsWith(todayStr)).length;
 
-  // HR Metrics
+  // Attendance Metrics
   const insideOffice = records.filter((r) => r.isInsideOffice).length;
   const presentToday = records.filter((r) => r.date?.startsWith(todayStr) || r.createdAt?.startsWith(todayStr)).length;
 
@@ -62,7 +63,7 @@ export function Dashboard() {
     <section className="stack">
       <div className="hero-band">
         <div>
-          <p className="eyebrow">{titleCase(user.role)} dashboard</p>
+          <p className="eyebrow">{titleCase(user.role.replace('_', ' '))} / {user.designation || "Dashboard"}</p>
           <h1>{user.name || "Welcome back"}</h1>
           <p>Track leads, follow-ups, attendance, team work, and operational signals from one place.</p>
         </div>
@@ -70,67 +71,68 @@ export function Dashboard() {
           <button onClick={() => navigate("/leads")}>Open leads</button>
           <button onClick={() => navigate("/tasks")}>Open tasks</button>
           <button onClick={() => navigate("/followups")}>Follow-ups</button>
+          {user.role === "SUPER_ADMIN" && (
+            <button onClick={() => downloadCsv("reports.csv", leads)} className="primary">
+              <Download size={16} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'text-bottom' }} />
+              Export Reports
+            </button>
+          )}
         </div>
       </div>
 
       <div className="metric-grid">
         {user.role === "SUPER_ADMIN" && (
           <>
-            <Metric label="Total users" value={data.users.length} icon={Users} />
-            <Metric label="Total leads" value={leads.length} detail={`${leadCounts.CONVERTED || 0} converted`} icon={TrendingUp} />
-            <Metric label="Attendance logs" value={records.length} detail={`${insideOffice} inside office`} icon={UserCheck} />
+            <Metric label="Total Users" value={users.length} icon={Users} />
+            <Metric label="Total HR/BDE/Telesales" value={users.filter(u => ['HR', 'BDE', 'TELESALES'].includes(u.role)).length} icon={UserCheck} />
+            <Metric label="Active Leads" value={leads.filter(l => !['CONVERTED', 'LOST'].includes(l.status)).length} icon={TrendingUp} />
+            <Metric label="Follow-Up Summary" value={data.upcoming.length + data.overdue.length} detail={`${data.overdue.length} overdue`} icon={Calendar} tone={data.overdue.length > 0 ? "danger" : "info"} />
+            <Metric label="Attendance Overview" value={presentToday} detail={`${insideOffice} inside office`} icon={UserCheck} />
           </>
         )}
 
         {user.role === "HR" && (
           <>
-            <Metric label="Present Today" value={presentToday} icon={UserCheck} tone="success" />
-            <Metric label="Outside Office" value={records.length - insideOffice} icon={Clock} tone="warning" />
-            <Metric label="Total logs" value={records.length} icon={Calendar} />
-          </>
-        )}
-
-        {user.role === "BDE" && (
-          <>
             <Metric label="Assigned Leads" value={leads.length} icon={Users} />
-            <Metric label="Today's Follow-Ups" value={data.upcoming.length} icon={Calendar} tone="info" />
-            <Metric label="Conversions" value={leadCounts.CONVERTED || 0} icon={TrendingUp} tone="success" />
+            <Metric label="Team Performance" value={completedTodayTasks} detail="Tasks completed today" icon={CheckCircle} tone="success" />
+            <Metric label="Attendance Status" value={presentToday} detail="Present Today" icon={UserCheck} tone="success" />
+            <Metric label="Task Management" value={tasks.length} detail={`${overdueTasks} overdue tasks`} icon={AlertCircle} tone={overdueTasks > 0 ? "danger" : "neutral"} />
+            <Metric label="Follow-Up Tracking" value={data.upcoming.length + data.overdue.length} icon={Calendar} tone="info" />
           </>
         )}
 
-        {user.role === "TELESALES" && (
+        {(user.role === "BDE" || user.role === "TELESALES") && (
           <>
-            <Metric label="Total Calls" value={leads.length} detail="Assigned" icon={PhoneCall} />
-            <Metric label="Today's Follow-Ups" value={data.upcoming.length} icon={Calendar} tone="info" />
-            <Metric label="Interested" value={leadCounts.INTERESTED || 0} icon={TrendingUp} tone="success" />
+            <Metric label="Assigned Tasks" value={tasks.length} detail={`${dueTodayTasks} due today`} icon={Clock} />
+            <Metric label="Assigned Leads" value={leads.length} icon={Users} />
+            <Metric label="Lead Status Counters" value={leads.length > 0 ? leads.length : 0} detail={`${leadCounts.HOT || 0} Hot, ${leadCounts.INTERESTED || 0} Interested`} icon={TrendingUp} />
+            <Metric label="Follow-Up Reminder" value={data.upcoming.length + data.overdue.length} detail={`${data.overdue.length} overdue`} icon={Bell} tone={data.overdue.length > 0 ? "danger" : "info"} />
+            <Metric label="Completed Tasks" value={completedTodayTasks} icon={CheckCircle} tone="success" />
           </>
         )}
 
-        <Metric label="Overdue Tasks" value={overdueTasks} icon={AlertCircle} tone="danger" />
-        <Metric label="Due Today" value={dueTodayTasks} icon={Clock} tone="warning" />
-        <Metric label="Completed Today" value={completedTodayTasks} icon={CheckCircle} tone="success" />
-        <Metric label="Unread alerts" value={data.notifications.unreadCount || 0} icon={Bell} tone="info" />
+        <Metric label="Unread alerts" value={data.notifications.unreadCount || 0} icon={Bell} tone="neutral" />
       </div>
 
-      {(isAdmin || user.role === "BDE") && (
-        <div className="two-col">
-          <div className="table-panel" style={{ padding: '24px', backgroundColor: 'var(--panel-bg)', borderRadius: '12px' }}>
-            <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Lead Status Distribution</h3>
-            {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={80} outerRadius={130} paddingAngle={5} dataKey="value">
-                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                  </Pie>
-                  <RechartsTooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="muted">No lead data available</p>}
-          </div>
-          <div className="table-panel" style={{ padding: '24px', backgroundColor: 'var(--panel-bg)', borderRadius: '12px' }}>
-            <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Task Performance</h3>
-            <ResponsiveContainer width="100%" height={400}>
+      <div className="two-col">
+        <div className="table-panel" style={{ padding: '24px', backgroundColor: 'var(--panel-bg)', borderRadius: '12px' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Lead Status Distribution</h3>
+          {pieData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                  {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                </Pie>
+                <RechartsTooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : <p className="muted">No lead data available</p>}
+        </div>
+        <div className="table-panel" style={{ padding: '24px', backgroundColor: 'var(--panel-bg)', borderRadius: '12px' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Task Performance</h3>
+          {barData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="name" fontSize={12} />
@@ -139,9 +141,9 @@ export function Dashboard() {
                 <Bar dataKey="Tasks" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          ) : <p className="muted">No task data available</p>}
         </div>
-      )}
+      </div>
 
       <div className="two-col">
         <div className="table-panel">
@@ -167,3 +169,4 @@ export function Dashboard() {
     </section>
   );
 }
+
