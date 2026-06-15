@@ -60,8 +60,12 @@ async function createUser(data, creatorId, io) {
 }
 
 async function getUsers() {
-    return prisma.user.findMany({
+    const users = await prisma.user.findMany({
         include: { role: true }
+    });
+    return users.map(u => {
+        const { passwordHash, ...rest } = u;
+        return rest;
     });
 }
 
@@ -75,7 +79,8 @@ async function getUserById(id) {
         throw new Error("User not found");
     }
 
-    return user;
+    const { passwordHash, ...rest } = user;
+    return rest;
 }
 
 async function updateUser(id, data, modifierId) {

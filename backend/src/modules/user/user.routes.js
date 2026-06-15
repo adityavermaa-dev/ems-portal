@@ -1,55 +1,21 @@
-const express =
-require("express");
+const express = require("express");
+const router = express.Router();
+const authMiddleware = require("../../middlewares/auth.middleware");
+const authorize = require("../../middlewares/role.middleware");
+const userController = require("./user.controller");
 
-const router =
-express.Router();
+router.use(authMiddleware);
 
-const authMiddleware =
-require("../../middlewares/auth.middleware");
+// All users can view the list of users for messaging/assignment purposes
+// Depending on security, we might restrict this, but HR needs it for assignments, 
+// and BDE needs it to message HR.
+router.get("/", authorize("SUPER_ADMIN", "HR", "BDE", "TELESALES"), userController.getUsers);
+router.get("/:id", authorize("SUPER_ADMIN", "HR"), userController.getUserById);
 
-const authorize =
-require("../../middlewares/role.middleware");
+// Only Super Admin can manage users
+router.post("/", authorize("SUPER_ADMIN"), userController.createUser);
+router.patch("/:id", authorize("SUPER_ADMIN"), userController.updateUser);
+router.patch("/:id/status", authorize("SUPER_ADMIN"), userController.updateStatus);
+router.patch("/:id/reset-password", authorize("SUPER_ADMIN"), userController.resetPassword);
 
-const userController =
-require("./user.controller");
-
-router.use(
-    authMiddleware
-);
-
-router.use(
-    authorize("SUPER_ADMIN")
-);
-
-router.post(
-    "/",
-    userController.createUser
-);
-
-router.get(
-    "/",
-    userController.getUsers
-);
-
-router.get(
-    "/:id",
-    userController.getUserById
-);
-
-router.patch(
-    "/:id",
-    userController.updateUser
-);
-
-router.patch(
-    "/:id/status",
-    userController.updateStatus
-);
-
-router.patch(
-    "/:id/reset-password",
-    userController.resetPassword
-);
-
-module.exports =
-router;
+module.exports = router;

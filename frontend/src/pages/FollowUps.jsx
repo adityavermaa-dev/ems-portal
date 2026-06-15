@@ -7,7 +7,7 @@ import { toInputDateTime, downloadCsv } from "../utils/helpers";
 import { PanelHeader, Select, FollowUpList } from "../components/ui";
 
 export function FollowUps() {
-  const { setNotice } = useOutletContext();
+  const { user, setNotice } = useOutletContext();
   const [leadId, setLeadId] = useState("");
   const leadsState = useAsync(() => api.leads({ limit: 100 }), []);
   const upcoming = useAsync(api.followUpsUpcoming, []);
@@ -33,7 +33,7 @@ export function FollowUps() {
 
   return (
     <section className="stack">
-      <PanelHeader title="Follow-up tracking" action={<button onClick={() => downloadCsv("follow-ups.csv", [...(upcoming.data || []), ...(overdue.data || []), ...(history.data || [])])}>Export CSV</button>} />
+      <PanelHeader title="Follow-up tracking" action={user.role === "SUPER_ADMIN" && <button onClick={() => downloadCsv("follow-ups.csv", [...(upcoming.data || []), ...(overdue.data || []), ...(history.data || [])])}>Export CSV</button>} />
       <form className="form-grid" onSubmit={createFollowUp}>
         <label>Lead<Select value={form.values.leadId} onChange={(e) => form.set("leadId", e.target.value)} options={leads.map((lead) => lead.id)} labels={Object.fromEntries(leads.map((lead) => [lead.id, `${lead.name} - ${lead.phone}`]))} required /></label>
         <label>Follow-up date<input type="datetime-local" max={toInputDateTime(new Date())} value={form.values.followUpDate} onChange={(e) => form.set("followUpDate", e.target.value)} required /></label>

@@ -8,7 +8,7 @@ import { PanelHeader, EmptyState } from "../components/ui";
 export function Messages() {
   const { user, setNotice } = useOutletContext();
   const conversations = useAsync(api.conversations, []);
-  const usersState = useAsync(() => user.role === "SUPER_ADMIN" ? api.users() : Promise.resolve([]), [user.role]);
+  const usersState = useAsync(() => api.users(), []);
   const [active, setActive] = useState(null);
   const [content, setContent] = useState("");
   const thread = useAsync(() => active ? api.conversation(active.id) : Promise.resolve({ messages: [] }), [active?.id]);

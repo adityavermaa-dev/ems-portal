@@ -81,7 +81,7 @@ export function Leads() {
       <PanelHeader title="Lead management" action={
         <RowActions>
           {isAdmin && <button onClick={() => setImporting(true)}>Import CSV</button>}
-          <button onClick={() => downloadCsv("leads.csv", leads)}>Export CSV</button>
+          {user.role === "SUPER_ADMIN" && <button onClick={() => downloadCsv("leads.csv", leads)}>Export CSV</button>}
         </RowActions>
       } />
       <div className="filters">

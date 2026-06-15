@@ -53,7 +53,7 @@ export function Tasks() {
 
   return (
     <section className="stack">
-      <PanelHeader title="Task assignment" action={<button onClick={() => downloadCsv("tasks.csv", tasks)}>Export CSV</button>} />
+      <PanelHeader title="Task assignment" action={user.role === "SUPER_ADMIN" && <button onClick={() => downloadCsv("tasks.csv", tasks)}>Export CSV</button>} />
       <div className="filters">
         <Select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} options={["", ...TASK_STATUSES]} placeholder="All statuses" />
         {isAdmin && <Select value={filters.assignedTo} onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })} options={["", ...employeeUsers.map((item) => item.id)]} labels={Object.fromEntries(employeeUsers.map((item) => [item.id, item.name]))} placeholder="All assignees" />}

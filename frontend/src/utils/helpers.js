@@ -49,8 +49,21 @@ export function downloadCsv(filename, rows) {
       rows.map((row) =>
         columns
           .map((key) => {
-            const value = row[key] ?? "";
-            return `"${String(typeof value === "object" ? JSON.stringify(value) : value).replaceAll('"', '""')}"`;
+            let value = row[key] ?? "";
+            if (typeof value === "object" && value !== null) {
+              if (Array.isArray(value)) {
+                value = `[${value.length} items]`;
+              } else if (value.name) {
+                value = value.name;
+              } else if (value.title) {
+                value = value.title;
+              } else if (value.id) {
+                value = value.id;
+              } else {
+                value = JSON.stringify(value);
+              }
+            }
+            return `"${String(value).replaceAll('"', '""')}"`;
           })
           .join(",")
       )

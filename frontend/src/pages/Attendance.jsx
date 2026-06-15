@@ -7,7 +7,7 @@ import { PanelHeader, EmptyState, DataTable, Badge, Loading, ErrorState, Select 
 import { Pagination } from "../components/Pagination";
 
 export function Attendance() {
-  const { canUseAttendanceActions: canAct, isAdmin, setNotice } = useOutletContext();
+  const { canUseAttendanceActions: canAct, isAdmin, setNotice, user } = useOutletContext();
   const [filters, setFilters] = useState({ startDate: "", endDate: "", isInsideOffice: "" });
   const [page, setPage] = useState(1);
   const { data, loading, error, refresh } = useAsync(() => (isAdmin ? api.attendance({ ...filters, page, limit: 10 }) : api.myAttendance({ ...filters, page, limit: 10 })), [filters.startDate, filters.endDate, filters.isInsideOffice, isAdmin, page]);
@@ -36,7 +36,7 @@ export function Attendance() {
 
   return (
     <section className="stack">
-      <PanelHeader title="Attendance management" action={<button onClick={() => downloadCsv("attendance.csv", records)}>Export CSV</button>} />
+      <PanelHeader title="Attendance management" action={user.role === "SUPER_ADMIN" && <button onClick={() => downloadCsv("attendance.csv", records)}>Export CSV</button>} />
       <div className="filters">
         <input type="date" value={filters.startDate} onChange={(e) => setFilters({ ...filters, startDate: e.target.value })} />
         <input type="date" value={filters.endDate} onChange={(e) => setFilters({ ...filters, endDate: e.target.value })} />
