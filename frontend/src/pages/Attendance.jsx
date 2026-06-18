@@ -29,6 +29,15 @@ export function Attendance() {
     }, () => setNotice("Location permission is required"));
   }
 
+  async function sendReminder() {
+    try {
+      const res = await api.sendAttendanceReminder();
+      setNotice(res.message || "Reminders sent successfully");
+    } catch (error) {
+      setNotice(error.message);
+    }
+  }
+
   if (loading) return <Loading />;
   if (error) return <ErrorState error={error} onRetry={refresh} />;
   const records = data?.records || [];
@@ -36,7 +45,12 @@ export function Attendance() {
 
   return (
     <section className="stack">
-      <PanelHeader title="Attendance management" action={user.role === "SUPER_ADMIN" && <button onClick={() => downloadCsv("attendance.csv", records)}>Export CSV</button>} />
+      <PanelHeader title="Attendance management" action={
+        <div style={{ display: "flex", gap: "10px" }}>
+          {isAdmin && <button onClick={sendReminder} className="secondary">Send Reminder</button>}
+          {user.role === "SUPER_ADMIN" && <button onClick={() => downloadCsv("attendance.csv", records)}>Export CSV</button>}
+        </div>
+      } />
       <div className="filters">
         <input type="date" value={filters.startDate} onChange={(e) => setFilters({ ...filters, startDate: e.target.value })} />
         <input type="date" value={filters.endDate} onChange={(e) => setFilters({ ...filters, endDate: e.target.value })} />

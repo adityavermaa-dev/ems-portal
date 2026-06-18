@@ -21,4 +21,6 @@ router.get('/', authorize('SUPER_ADMIN', 'HR'), attendanceController.getAttendan
 
 router.get('/user/:userId', authorize('SUPER_ADMIN', 'HR'), attendanceController.getUserAttendance);
 
+router.post('/remind', authorize('SUPER_ADMIN', 'HR'), attendanceController.sendReminder);
+
 module.exports = router;

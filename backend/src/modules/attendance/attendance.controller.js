@@ -64,10 +64,21 @@ async function getUserAttendance(req, res) {
     }
 }
 
+async function sendReminder(req, res) {
+    try {
+        const io = req.app.get('io');
+        const result = await attendanceService.sendReminder(req.user.userId, io);
+        res.json({ success: true, data: result });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
     checkIn,
     checkOut,
     getAttendanceRecords,
     getMyAttendance,
-    getUserAttendance
+    getUserAttendance,
+    sendReminder
 };

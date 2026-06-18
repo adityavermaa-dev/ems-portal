@@ -55,6 +55,8 @@ export const api = {
   checkOut: (body) => request("/api/attendance/check-out", { method: "PATCH", body }),
   myAttendance: (params) => request(`/api/attendance/my${buildQuery(params)}`),
   attendance: (params) => request(`/api/attendance${buildQuery(params)}`),
+  // Force Vite HMR reload
+  sendAttendanceReminder: () => request("/api/attendance/remind", { method: "POST" }),
   notifications: (params) => request(`/api/notifications${buildQuery(params)}`),
   unreadCount: () => request("/api/notifications/unread-count"),
   markNotificationRead: (id) => request(`/api/notifications/${id}/read`, { method: "PATCH" }),

@@ -216,10 +216,54 @@ async function getUserAttendance(userId, query = {}) {
     return getAttendanceRecords({ ...query, userId });
 }
 
+async function sendReminder(hrUserId, io) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const users = await prisma.user.findMany({
+        where: {
+            role: { name: { in: ['BDE', 'TELESALES'] } },
+            isActive: true
+        }
+    });
+
+    const attendances = await prisma.attendance.findMany({
+        where: { date: { gte: today, lt: tomorrow } },
+        select: { userId: true }
+    });
+    
+    const checkedInUserIds = new Set(attendances.map(a => a.userId));
+    const missingUsers = users.filter(u => !checkedInUserIds.has(u.id));
+
+    if (missingUsers.length === 0) {
+        return { success: true, count: 0, message: "All active employees have already checked in today." };
+    }
+
+    return prisma.$transaction(async (tx) => {
+        const promises = missingUsers.map(user => 
+            createNotification(
+                user.id,
+                'Attendance Reminder',
+                'Please mark your attendance for today.',
+                'WARNING',
+                io,
+                tx
+            )
+        );
+        promises.push(logActivity(hrUserId, 'SENT_ATTENDANCE_REMINDER', 'Attendance', null, `Sent to ${missingUsers.length} employees`, tx));
+        
+        await Promise.all(promises);
+        return { success: true, count: missingUsers.length, message: `Sent reminders to ${missingUsers.length} employees.` };
+    });
+}
+
 module.exports = {
     checkIn,
     checkOut,
     getAttendanceRecords,
     getMyAttendance,
-    getUserAttendance
+    getUserAttendance,
+    sendReminder
 };
