@@ -27,11 +27,13 @@ async function createTask(data, assignedBy, io) {
                 assignedTo: Number(data.assignedTo),
                 assignedBy,
                 dueDate: new Date(data.dueDate),
-                status: 'PENDING'
+                status: 'PENDING',
+                leadId: data.leadId ? Number(data.leadId) : null
             },
             include: {
                 assignedUser: { select: { id: true, name: true, email: true } },
-                creator: { select: { id: true, name: true, email: true } }
+                creator: { select: { id: true, name: true, email: true } },
+                lead: { select: { id: true, name: true } }
             }
         });
 
@@ -79,7 +81,8 @@ async function getTasks(userId, role, query = {}) {
             where,
             include: {
                 assignedUser: { select: { id: true, name: true, email: true } },
-                creator: { select: { id: true, name: true, email: true } }
+                creator: { select: { id: true, name: true, email: true } },
+                lead: { select: { id: true, name: true } }
             },
             orderBy: { createdAt: 'desc' },
             skip,
@@ -112,7 +115,8 @@ async function getTaskById(id, userId, role) {
         where: { id: Number(id) },
         include: {
             assignedUser: { select: { id: true, name: true, email: true } },
-            creator: { select: { id: true, name: true, email: true } }
+            creator: { select: { id: true, name: true, email: true } },
+            lead: { select: { id: true, name: true } }
         }
     });
 
@@ -157,7 +161,8 @@ async function updateTaskStatus(id, status, userId, role, io) {
             data: updateData,
             include: {
                 assignedUser: { select: { id: true, name: true, email: true } },
-                creator: { select: { id: true, name: true, email: true } }
+                creator: { select: { id: true, name: true, email: true } },
+                lead: { select: { id: true, name: true } }
             }
         });
 

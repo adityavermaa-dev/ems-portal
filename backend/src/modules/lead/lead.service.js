@@ -147,6 +147,14 @@ async function getLeadById(id, userId, role) {
                     creator: { select: { id: true, name: true } }
                 },
                 orderBy: { createdAt: 'desc' }
+            },
+            notes: {
+                include: { creator: { select: { id: true, name: true, role: true } } },
+                orderBy: { createdAt: 'desc' }
+            },
+            tasks: {
+                where: { status: { not: 'COMPLETED' } },
+                include: { assignedUser: { select: { id: true, name: true } } }
             }
         }
     });
@@ -295,6 +303,30 @@ async function updateLeadStatus(id, status, userId, role) {
     });
 }
 
+async function addNote(leadId, content, creatorId) {
+    if (!content) throw new Error("Note content is required");
+    return prisma.$transaction(async (tx) => {
+        const note = await tx.note.create({
+            data: {
+                leadId: Number(leadId),
+                content,
+                createdBy: creatorId
+            },
+            include: { creator: { select: { id: true, name: true, role: true } } }
+        });
+        await logActivity(creatorId, 'ADD_NOTE', 'Lead', leadId, null, tx);
+        return note;
+    });
+}
+
+async function getNotes(leadId) {
+    return prisma.note.findMany({
+        where: { leadId: Number(leadId) },
+        include: { creator: { select: { id: true, name: true, role: true } } },
+        orderBy: { createdAt: 'desc' }
+    });
+}
+
 module.exports = {
     createLead,
     importLeads,
@@ -302,5 +334,7 @@ module.exports = {
     getLeadById,
     updateLead,
     updateLeadStatus,
-    assignLead
+    assignLead,
+    addNote,
+    getNotes
 };

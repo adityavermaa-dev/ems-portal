@@ -60,6 +60,7 @@ model User {
   // Lead Relations
   assignedLeads Lead[] @relation("AssignedLeads")
   createdLeads  Lead[] @relation("CreatedLeads")
+  createdNotes  Note[] @relation("CreatedNotes")
 
   // Task Relations
   assignedTasks Task[] @relation("AssignedTasks")
@@ -107,6 +108,8 @@ model Lead {
   creator   User @relation("CreatedLeads", fields: [createdBy], references: [id])
 
   followUps FollowUp[]
+  notes     Note[]
+  tasks     Task[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -141,6 +144,9 @@ model Task {
 
   assignedTo   Int
   assignedUser User @relation("AssignedTasks", fields: [assignedTo], references: [id])
+
+  leadId       Int?
+  lead         Lead? @relation(fields: [leadId], references: [id])
 
   assignedBy Int
   creator    User @relation("CreatedTasks", fields: [assignedBy], references: [id])
@@ -236,4 +242,19 @@ model ActivityLog {
   details String?
 
   createdAt DateTime @default(now())
+}
+
+model Note {
+  id Int @id @default(autoincrement())
+
+  leadId Int
+  lead   Lead @relation(fields: [leadId], references: [id])
+
+  content String
+
+  createdBy Int
+  creator   User @relation("CreatedNotes", fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

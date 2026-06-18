@@ -30,4 +30,8 @@ router.patch('/:id/status', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), 
 
 router.patch('/:id/assign', authorize('SUPER_ADMIN', 'HR'), leadController.assignLead);
 
+router.post('/:id/notes', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), leadController.addNote);
+
+router.get('/:id/notes', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), leadController.getNotes);
+
 module.exports = router;

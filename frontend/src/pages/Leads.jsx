@@ -7,6 +7,7 @@ import { EMPLOYEE_ROLES, LEAD_STATUSES } from "../utils/constants";
 import { titleCase, downloadCsv } from "../utils/helpers";
 import { PanelHeader, Select, DataTable, Badge, RowActions, Modal, Loading, ErrorState } from "../components/ui";
 import { Pagination } from "../components/Pagination";
+import { Phone, Mail, MessageCircle } from "lucide-react";
 
 export function Leads() {
   const { user, isAdmin, setNotice } = useOutletContext();
@@ -14,6 +15,8 @@ export function Leads() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [assignTo, setAssignTo] = useState("");
+  const [viewingLead, setViewingLead] = useState(null);
+  const [noteContent, setNoteContent] = useState("");
   const [importing, setImporting] = useState(false);
   const [file, setFile] = useState(null);
   
@@ -52,6 +55,27 @@ export function Leads() {
     setSelected(null);
     setAssignTo("");
     refresh();
+  }
+
+  async function loadLeadDetails(lead) {
+    try {
+      const fullLead = await api.getLeadById(lead.id);
+      setViewingLead(fullLead);
+    } catch (err) {
+      setNotice("Failed to load lead details");
+    }
+  }
+
+  async function handleAddNote(e) {
+    e.preventDefault();
+    try {
+      await api.createLeadNote(viewingLead.id, { content: noteContent });
+      setNoteContent("");
+      await loadLeadDetails(viewingLead); // refresh details
+      setNotice("Note added");
+    } catch (err) {
+      setNotice(err.message);
+    }
   }
 
   async function importCsv(event) {
@@ -99,14 +123,30 @@ export function Leads() {
         </form>
       )}
       <DataTable
-        columns={["Lead", "Phone", "Status", "Assigned", "Follow-ups", "Actions"]}
+        columns={["Lead", "Email", "Phone", "Source", "Status", "Assigned", "Follow-ups", "Actions"]}
         rows={leads.map((lead) => [
-          <div key={lead.id}><strong>{lead.name}</strong><br/><small>{lead.email || lead.source || "No email/source"}</small></div>,
-          lead.phone,
+          <div key={lead.id}>
+            <strong style={{ cursor: 'pointer', color: 'var(--accent)' }} onClick={() => loadLeadDetails(lead)}>{lead.name}</strong>
+          </div>,
+          lead.email ? (
+            <a href={`mailto:${lead.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+              <Mail size={12} /> {lead.email}
+            </a>
+          ) : "-",
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <a href={`tel:${lead.phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }} title="Call">
+              <Phone size={14} /> {lead.phone}
+            </a>
+            <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', color: '#25D366' }} title="WhatsApp">
+              <MessageCircle size={16} />
+            </a>
+          </div>,
+          lead.source || "-",
           <Badge tone={lead.status === "CONVERTED" ? "success" : lead.status === "NOT_INTERESTED" ? "danger" : "info"}>{titleCase(lead.status)}</Badge>,
           lead.assignedUser?.name || "Unassigned",
           lead._count?.followUps ?? lead.followUps?.length ?? 0,
           <RowActions>
+            <button onClick={() => loadLeadDetails(lead)}>Details</button>
             <Select value={lead.status} onChange={(e) => updateStatus(lead, e.target.value)} options={LEAD_STATUSES} />
             {isAdmin && <button onClick={() => setSelected(lead)}>Assign</button>}
           </RowActions>,
@@ -119,6 +159,50 @@ export function Leads() {
             <label>Employee<Select value={assignTo} onChange={(e) => setAssignTo(e.target.value)} options={employeeUsers.map((item) => item.id)} labels={Object.fromEntries(employeeUsers.map((item) => [item.id, `${item.name} (${titleCase(item.role?.name)})`]))} required /></label>
             <button className="primary">Assign lead</button>
           </form>
+        </Modal>
+      )}
+      {viewingLead && (
+        <Modal title={`Lead Details: ${viewingLead.name}`} onClose={() => { setViewingLead(null); refresh(); }}>
+          <div className="stack" style={{ gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'var(--panel-bg)', padding: '16px', borderRadius: '8px' }}>
+              <div><strong>Phone:</strong> <a href={`tel:${viewingLead.phone}`}>{viewingLead.phone}</a></div>
+              <div><strong>Email:</strong> {viewingLead.email ? <a href={`mailto:${viewingLead.email}`}>{viewingLead.email}</a> : "-"}</div>
+              <div><strong>Status:</strong> <Badge>{viewingLead.status}</Badge></div>
+              <div><strong>Assigned:</strong> {viewingLead.assignedUser?.name || "Unassigned"}</div>
+            </div>
+
+            {viewingLead.tasks && viewingLead.tasks.length > 0 && (
+              <div>
+                <h4 style={{ marginBottom: '8px' }}>Active Tasks</h4>
+                <div className="list">
+                  {viewingLead.tasks.map(t => (
+                    <article key={t.id} style={{ background: 'var(--bg)', padding: '12px', borderRadius: '6px' }}>
+                      <strong>{t.title}</strong> - <Badge>{t.status}</Badge><br/>
+                      <small>Due: {new Date(t.dueDate).toLocaleString()}</small>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h4 style={{ marginBottom: '8px' }}>Interaction Notes</h4>
+              <div className="list" style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '16px' }}>
+                {viewingLead.notes?.map(note => (
+                  <article key={note.id} style={{ background: 'var(--bg)', padding: '12px', borderRadius: '6px' }}>
+                    <small style={{ color: 'var(--muted)' }}>{new Date(note.createdAt).toLocaleString()} by {note.creator?.name}</small>
+                    <p style={{ marginTop: '4px' }}>{note.content}</p>
+                  </article>
+                ))}
+                {(!viewingLead.notes || viewingLead.notes.length === 0) && <p className="muted">No notes yet.</p>}
+              </div>
+
+              <form onSubmit={handleAddNote} style={{ display: 'flex', gap: '8px' }}>
+                <input type="text" placeholder="Add a note about this interaction..." value={noteContent} onChange={e => setNoteContent(e.target.value)} required style={{ flex: 1 }} />
+                <button className="primary">Add Note</button>
+              </form>
+            </div>
+          </div>
         </Modal>
       )}
       {importing && (

@@ -79,6 +79,25 @@ async function updateLeadStatus(req, res) {
     }
 }
 
+async function addNote(req, res) {
+    try {
+        const { content } = req.body;
+        const note = await leadService.addNote(req.params.id, content, req.user.userId);
+        res.status(201).json({ success: true, data: note });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+}
+
+async function getNotes(req, res) {
+    try {
+        const notes = await leadService.getNotes(req.params.id);
+        res.json({ success: true, data: notes });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
     createLead,
     importLeads,
@@ -86,5 +105,7 @@ module.exports = {
     getLeadById,
     updateLead,
     updateLeadStatus,
-    assignLead
+    assignLead,
+    addNote,
+    getNotes
 };

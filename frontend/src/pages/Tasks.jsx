@@ -14,10 +14,12 @@ export function Tasks() {
   const [page, setPage] = useState(1);
   const { data, loading, error, refresh } = useAsync(() => api.tasks({ ...filters, page, limit: 10 }), [filters.status, filters.assignedTo, filters.isOverdue, page]);
   const usersState = useAsync(() => isAdmin ? api.users() : Promise.resolve([]), [isAdmin]);
-  const form = useForm({ title: "", description: "", assignedTo: "", dueDate: "" });
+  const leadsState = useAsync(() => isAdmin ? api.leads({ limit: 1000 }) : Promise.resolve({ leads: [] }), [isAdmin]);
+  const form = useForm({ title: "", description: "", assignedTo: "", dueDate: "", leadId: "" });
   const [reasonTask, setReasonTask] = useState(null);
   const [reason, setReason] = useState("");
   const employeeUsers = (usersState.data || []).filter((item) => item.isActive);
+  const leadsList = leadsState.data?.leads || [];
 
   async function createTask(event) {
     event.preventDefault();
@@ -64,6 +66,7 @@ export function Tasks() {
           <label>Title<input value={form.values.title} onChange={(e) => form.set("title", e.target.value)} required /></label>
           <label>Assignee<Select value={form.values.assignedTo} onChange={(e) => form.set("assignedTo", e.target.value)} options={employeeUsers.map((item) => item.id)} labels={Object.fromEntries(employeeUsers.map((item) => [item.id, `${item.name} (${titleCase(item.role?.name)})`]))} required /></label>
           <label>Due date<input type="datetime-local" value={form.values.dueDate} onChange={(e) => form.set("dueDate", e.target.value)} required /></label>
+          <label>Related Lead (Optional)<Select value={form.values.leadId} onChange={(e) => form.set("leadId", e.target.value)} options={["", ...leadsList.map(l => l.id)]} labels={{ "": "None", ...Object.fromEntries(leadsList.map(l => [l.id, l.name])) }} /></label>
           <label className="wide">Description<textarea value={form.values.description} onChange={(e) => form.set("description", e.target.value)} /></label>
           <button className="primary">Assign task</button>
         </form>
@@ -71,7 +74,12 @@ export function Tasks() {
       <DataTable
         columns={["Task", "Assignee", "Due", "Status", "Delay", "Actions"]}
         rows={tasks.map((task) => [
-          <div key={task.id}><strong>{task.title}</strong><br/><small>{task.description || "No description"}</small></div>,
+          <div key={task.id}>
+            <strong>{task.title}</strong>
+            {task.lead && <Badge tone="info" style={{ marginLeft: '8px', fontSize: '10px' }}>Lead: {task.lead.name}</Badge>}
+            <br/>
+            <small>{task.description || "No description"}</small>
+          </div>,
           task.assignedUser?.name || "-",
           formatDate(task.dueDate, true),
           <Badge tone={task.status === "COMPLETED" ? "success" : task.isOverdue ? "danger" : "info"}>{titleCase(task.status)}</Badge>,
