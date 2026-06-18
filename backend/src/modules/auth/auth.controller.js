@@ -27,7 +27,7 @@ async function logout(req, res) {
             const decoded = verifyToken(req.cookies.accessToken);
             await authService.logout(decoded.userId);
         } catch (e) {
-            // Token may be expired, still allow logout
+            
         }
     }
 

@@ -3,12 +3,8 @@ const path = require('path');
 
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
-/**
- * Calculate distance between two GPS coordinates using Haversine formula
- * @returns distance in meters
- */
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371000; // Earth's radius in meters
+    const R = 6371000; 
     const toRad = (deg) => (deg * Math.PI) / 180;
 
     const dLat = toRad(lat2 - lat1);
@@ -24,10 +20,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-/**
- * Check if coordinates are inside office radius
- * @returns {{ distance: number, isInside: boolean }}
- */
 function isInsideOffice(lat, lon) {
     const officeLat = parseFloat(process.env.OFFICE_LATITUDE) || 28.6139;
     const officeLon = parseFloat(process.env.OFFICE_LONGITUDE) || 77.2090;

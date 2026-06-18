@@ -15,7 +15,7 @@ export default function Analytics() {
 
   const { leaderboard, taskPerformance, attendanceInsights, leadAging, healthScore } = data;
 
-  // Format Leaderboard
+  
   const leaderColumns = ["Employee", "Total Leads", "Converted", "Conversion Rate", "Follow-ups", "FU Conversions"];
   const leaderRows = leaderboard.map(row => [
     <strong key={row.id}>{row.name}</strong>,
@@ -28,7 +28,7 @@ export default function Analytics() {
     row.fuConversions
   ]);
 
-  // Format Tasks
+  
   const taskColumns = ["Employee", "Assigned", "Completed", "Overdue"];
   const taskRows = taskPerformance.map(row => [
     <strong key={row.id}>{row.name}</strong>,
@@ -39,14 +39,14 @@ export default function Analytics() {
     </span>
   ]);
 
-  // Format Attendance
+  
   const attColumns = ["Employee", "Late Check-ins (This Month)"];
   const attRows = attendanceInsights.map(row => [
     <strong key={row.name}>{row.name}</strong>,
     <span key={row.name} style={{ color: '#f59e0b', fontWeight: 'bold' }}>{row.lateDays}</span>
   ]);
 
-  // Aging Chart Data
+  
   const agingData = [
     { name: "< 7 Days", count: leadAging.under7, color: '#10b981' },
     { name: "7 - 30 Days", count: leadAging.from7to30, color: '#f59e0b' },

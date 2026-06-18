@@ -11,7 +11,7 @@ async function createNotification(userId, title, message, type = 'INFO', io = nu
             }
         });
 
-        // Emit real-time notification if Socket.IO instance is available
+        
         if (io) {
             io.to(`user_${userId}`).emit('new_notification', notification);
         }

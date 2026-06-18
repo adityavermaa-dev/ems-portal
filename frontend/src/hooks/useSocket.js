@@ -18,11 +18,11 @@ export function useSocket() {
     }
 
     if (!socketRef.current) {
-      // Get the token from document.cookie, as socket.io in browser needs credentials
-      // But actually with credentials: true, cookies are sent automatically!
+      
+      
       socketRef.current = io(API_URL, {
         withCredentials: true,
-        // if token fallback is needed, we could extract it from auth store, but cookies work.
+        
       });
 
       socketRef.current.on('connect', () => {

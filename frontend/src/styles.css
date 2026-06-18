@@ -591,18 +591,71 @@ td small {
   border-radius: 0;
 }
 
+.mobile-toggle,
+.mobile-close {
+  display: none;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  min-height: auto;
+  color: inherit;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
 @media (max-width: 1080px) {
   .app-shell {
     grid-template-columns: 1fr;
   }
+  
+  .mobile-toggle {
+    display: block;
+  }
 
   .sidebar {
-    position: static;
-    height: auto;
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
   }
 
   .sidebar nav {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+  }
+  
+  .brand {
+    justify-content: space-between;
+  }
+
+  .mobile-close {
+    display: block;
+    color: #f7fbfc;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 90;
   }
 
   .metric-grid,
@@ -621,7 +674,13 @@ td small {
   .hero-band,
   .list article {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+  }
+  
+  .topbar-actions {
+    margin-top: 12px;
+    width: 100%;
+    justify-content: space-between;
   }
 
   main,
@@ -630,7 +689,6 @@ td small {
     padding-right: 16px;
   }
 
-  .sidebar nav,
   .metric-grid,
   .form-grid {
     grid-template-columns: 1fr;
@@ -647,5 +705,21 @@ td small {
 
   .bars > div {
     grid-template-columns: 1fr;
+  }
+  
+  .quick-actions {
+    justify-content: flex-start;
+    width: 100%;
+    margin-top: 16px;
+  }
+  
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    width: max-content;
+    max-width: 90vw;
   }
 }

@@ -6,11 +6,11 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 
-// Middleware imports
+
 const authMiddleware = require("./middlewares/auth.middleware");
 const errorHandler = require("./middlewares/errorHandler.middleware");
 
-// Route imports
+
 const authRoutes = require("./modules/auth/auth.route");
 const userRoutes = require("./modules/user/user.routes");
 const leadRoutes = require("./modules/lead/lead.routes");
@@ -24,7 +24,7 @@ const analyticsRoutes = require("./modules/analytics/analytics.routes");
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
-// Global Middleware
+
 app.use(helmet());
 app.use(cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -33,7 +33,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// API Routes
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/leads", leadRoutes);
@@ -45,7 +45,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
-// Health check
+
 app.get("/", (req, res) => {
     res.json({
         success: true,
@@ -65,17 +65,17 @@ app.get("/", (req, res) => {
     });
 });
 
-// Profile route
+
 app.get("/profile", authMiddleware, (req, res) => {
     res.json(req.user);
 });
 
-// 404 handler
+
 app.use((req, res) => {
     res.status(404).json({ success: false, message: "Route not found" });
 });
 
-// Global error handler
+
 app.use(errorHandler);
 
 module.exports = app;

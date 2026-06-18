@@ -1,7 +1,7 @@
 const { Server } = require('socket.io');
 const { verifyToken } = require('../utils/jwt');
 
-// Map userId -> Set of socketIds (user can have multiple tabs)
+
 const onlineUsers = new Map();
 
 function initializeSocket(httpServer) {
@@ -13,7 +13,7 @@ function initializeSocket(httpServer) {
         }
     });
 
-    // Authentication middleware
+    
     io.use((socket, next) => {
         try {
             const token = socket.handshake.auth.token ||
@@ -36,19 +36,19 @@ function initializeSocket(httpServer) {
         const userId = socket.userId;
         console.log(`User ${userId} connected (socket: ${socket.id})`);
 
-        // Join user's personal room for targeted notifications
+        
         socket.join(`user_${userId}`);
 
-        // Track online status
+        
         if (!onlineUsers.has(userId)) {
             onlineUsers.set(userId, new Set());
         }
         onlineUsers.get(userId).add(socket.id);
 
-        // Broadcast online status
+        
         io.emit('user_online', { userId });
 
-        // Handle typing indicators
+        
         socket.on('typing', (data) => {
             io.to(`user_${data.receiverId}`).emit('user_typing', {
                 userId,
@@ -56,7 +56,7 @@ function initializeSocket(httpServer) {
             });
         });
 
-        // Handle disconnect
+        
         socket.on('disconnect', () => {
             console.log(`User ${userId} disconnected (socket: ${socket.id})`);
 

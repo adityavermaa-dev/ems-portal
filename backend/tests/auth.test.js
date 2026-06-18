@@ -5,11 +5,9 @@ const bcrypt = require('bcrypt');
 
 describe('Auth Endpoints', () => {
   beforeAll(async () => {
-    // Make sure we have a test user
     const hashed = await bcrypt.hash('password123', 10);
     const existing = await prisma.user.findUnique({ where: { email: 'test_jest@zustandtech.com' }});
     if (!existing) {
-      // Find a role
       let role = await prisma.role.findUnique({ where: { name: 'BDE' }});
       if (!role) {
         role = await prisma.role.create({ data: { name: 'BDE', permissions: ['manage_leads'] }});
@@ -26,7 +24,6 @@ describe('Auth Endpoints', () => {
   });
 
   afterAll(async () => {
-    // Cleanup
     await prisma.user.delete({ where: { email: 'test_jest@zustandtech.com' } });
     await prisma.$disconnect();
   });

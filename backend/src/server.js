@@ -8,7 +8,7 @@ const { validateEnv } = require("./config/env.validator");
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
-// Validate required environment variables before starting
+
 validateEnv();
 
 const PORT = process.env.PORT || 9999;
@@ -18,11 +18,11 @@ async function startServer() {
         await prisma.$connect();
         console.log("✅ Database Connected");
 
-        // Create HTTP server and attach Socket.IO
+        
         const httpServer = http.createServer(app);
         const io = initializeSocket(httpServer);
 
-        // Store io instance on app for use in controllers
+        
         app.set('io', io);
 
         httpServer.listen(PORT, () => {

@@ -8,7 +8,7 @@ const csv = require('csv-parser');
 async function createLead(data, createdBy) {
     validateCreateLead(data);
 
-    // This unique check is still good to provide a clean error message, though DB constraint will also block.
+    
     const existingLead = await prisma.lead.findUnique({
         where: { phone: data.phone }
     });

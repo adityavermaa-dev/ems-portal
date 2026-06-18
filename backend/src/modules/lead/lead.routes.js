@@ -9,25 +9,25 @@ const upload = multer({ dest: 'uploads/' });
 
 router.use(authMiddleware);
 
-// Create lead - SUPER_ADMIN, HR only
+
 router.post('/', authorize('SUPER_ADMIN', 'HR'), leadController.createLead);
 
-// Import leads via CSV
+
 router.post('/import', authorize('SUPER_ADMIN', 'HR'), upload.single('file'), leadController.importLeads);
 
-// Get all leads - All authenticated (filtered by role in service)
+
 router.get('/', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), leadController.getLeads);
 
-// Get lead by ID
+
 router.get('/:id', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), leadController.getLeadById);
 
-// Update lead
+
 router.put('/:id', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), leadController.updateLead);
 
-// Update lead status independently
+
 router.patch('/:id/status', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), leadController.updateLeadStatus);
 
-// Assign lead - SUPER_ADMIN, HR only
+
 router.patch('/:id/assign', authorize('SUPER_ADMIN', 'HR'), leadController.assignLead);
 
 module.exports = router;

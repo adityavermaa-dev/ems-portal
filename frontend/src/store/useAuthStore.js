@@ -43,7 +43,7 @@ export const useAuthStore = create((set) => ({
     try {
       await api.logout();
     } catch {
-      // Ignore errors on logout
+      
     }
     localStorage.removeItem("ems.user");
     set({ user: null });

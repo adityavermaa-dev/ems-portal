@@ -15,7 +15,7 @@ export function Dashboard() {
   const { data, loading, error, refresh } = useAsync(async () => {
     const today = new Date().toISOString().split('T')[0];
     
-    // Base requests for everyone
+    
     const [leads, tasks, upcoming, overdue, attendance, notifications, activityLog] = await Promise.all([
       api.leads({ limit: 100 }),
       api.tasks({ limit: 100 }),
@@ -43,18 +43,18 @@ export function Dashboard() {
   
   const leadCounts = countBy(leads, (lead) => lead.status);
   
-  // Task Metrics
+  
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
   const overdueTasks = tasks.filter((t) => t.status !== "COMPLETED" && new Date(t.dueDate) < now).length;
   const dueTodayTasks = tasks.filter((t) => t.status !== "COMPLETED" && t.dueDate && t.dueDate.startsWith(todayStr)).length;
   const completedTodayTasks = tasks.filter((t) => t.status === "COMPLETED" && t.updatedAt && t.updatedAt.startsWith(todayStr)).length;
 
-  // Attendance Metrics
+  
   const insideOffice = records.filter((r) => r.isInsideOffice).length;
   const presentToday = records.filter((r) => r.date?.startsWith(todayStr) || r.createdAt?.startsWith(todayStr)).length;
 
-  // Chart Data
+  
   const pieData = LEAD_STATUSES.map((status) => ({ name: titleCase(status), value: leadCounts[status] || 0 })).filter(d => d.value > 0);
   const barData = TASK_STATUSES.map((status) => ({ name: titleCase(status), Tasks: tasks.filter((task) => task.status === status).length }));
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];

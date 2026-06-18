@@ -39,12 +39,12 @@ async function createFollowUp(data, userId, role, io) {
 
         const leadUpdateData = {};
         
-        // Lead Status cascading
+        
         if (['NEW', 'INTERESTED'].includes(lead.status)) {
             leadUpdateData.status = 'FOLLOW_UP';
         }
 
-        // Auto-stamp contact tracking
+        
         if (!lead.firstContactedAt) {
             leadUpdateData.firstContactedAt = new Date();
         }

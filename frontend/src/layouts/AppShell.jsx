@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { titleCase, cx } from "../utils/helpers";
 import { EMPLOYEE_ROLES } from "../utils/constants";
 import { useSocket } from "../hooks/useSocket";
-import { Bell } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { api } from "../services/api";
 
 export function AppShell() {
@@ -14,6 +14,7 @@ export function AppShell() {
   const socket = useSocket();
   const [notice, setNotice] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     api.unreadCount().then(res => setUnreadCount(res.unreadCount || 0)).catch(() => {});
@@ -44,6 +45,10 @@ export function AppShell() {
     };
   }, [socket]);
 
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
   if (!user) return null;
 
   const isAdmin = ["SUPER_ADMIN", "HR"].includes(user.role);
@@ -67,17 +72,19 @@ export function AppShell() {
     await logout();
   }
 
-  // Provide notice capability to children via React context if needed, 
-  // but for simplicity we will just pass it down via Outlet context.
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
+      <aside className={cx("sidebar", sidebarOpen && "open")}>
         <div className="brand">
           <span className="brand-mark">ZT</span>
           <div>
             <strong>EMS Portal</strong>
             <small>{titleCase(user.role)}</small>
           </div>
+          <button className="mobile-close" onClick={() => setSidebarOpen(false)}>
+            <X size={20} />
+          </button>
         </div>
         <nav>
           {navigation.map(([path, label]) => (
@@ -93,9 +100,14 @@ export function AppShell() {
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <div>
-            <p className="eyebrow">Signed in as</p>
-            <h2>{user.name || "EMS User"}</h2>
+          <div className="topbar-left">
+            <button className="mobile-toggle" onClick={() => setSidebarOpen(true)}>
+              <Menu size={24} color="#1a2530" />
+            </button>
+            <div>
+              <p className="eyebrow">Signed in as</p>
+              <h2>{user.name || "EMS User"}</h2>
+            </div>
           </div>
           <div className="topbar-actions">
             {notice && <span className="toast">{notice}</span>}

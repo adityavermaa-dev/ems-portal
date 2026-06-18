@@ -3,7 +3,7 @@ const prisma = require('../../config/prisma');
 async function getAnalytics() {
   const now = new Date();
   
-  // 1. Employee Leaderboard (Leads & FollowUps)
+  
   const users = await prisma.user.findMany({
     where: { role: { name: { in: ['BDE', 'TELESALES'] } } },
     select: { id: true, name: true }
@@ -35,7 +35,7 @@ async function getAnalytics() {
     };
   }).sort((a, b) => b.conversionRate - a.conversionRate);
 
-  // 2. Task Performance
+  
   const allUsers = await prisma.user.findMany({ select: { id: true, name: true } });
   const tasks = await prisma.task.findMany({
     select: { assignedTo: true, status: true, dueDate: true }
@@ -54,7 +54,7 @@ async function getAnalytics() {
     };
   }).filter(t => t.assigned > 0).sort((a, b) => b.overdue - a.overdue);
 
-  // 3. Attendance Insights (Late Check-ins this month)
+  
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const attendance = await prisma.attendance.findMany({
     where: { date: { gte: startOfMonth } },
@@ -65,7 +65,7 @@ async function getAnalytics() {
   attendance.forEach(record => {
     if (record.checkIn) {
       const checkInHour = new Date(record.checkIn).getHours();
-      // Consider late if after 10:00 AM (10 AM = 10)
+      
       if (checkInHour >= 10) {
         lateCheckins[record.userId] = (lateCheckins[record.userId] || 0) + 1;
       }
@@ -80,7 +80,7 @@ async function getAnalytics() {
     }))
     .sort((a, b) => b.lateDays - a.lateDays);
 
-  // 4. Lead Aging
+  
   let ageUnder7 = 0;
   let age7to30 = 0;
   let ageOver30 = 0;
@@ -92,11 +92,11 @@ async function getAnalytics() {
     else ageOver30++;
   });
 
-  // 5. Business Health Score Algorithm
-  // Just a simple heuristic for demo
+  
+  
   const totalLeads = leads.length || 1;
   const totalConverted = leads.filter(l => l.status === 'CONVERTED').length;
-  const leadScore = Math.min((totalConverted / totalLeads) * 100 * 3, 100); // Exaggerated for score
+  const leadScore = Math.min((totalConverted / totalLeads) * 100 * 3, 100); 
   
   const totalTasks = tasks.length || 1;
   const taskCompleted = tasks.filter(t => t.status === 'COMPLETED').length;

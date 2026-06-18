@@ -6,19 +6,19 @@ const followUpController = require('./followUp.controller');
 
 router.use(authMiddleware);
 
-// Create follow-up
+
 router.post('/', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.createFollowUp);
 
-// Get upcoming follow-ups
+
 router.get('/upcoming', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.getUpcomingFollowUps);
 
-// Get overdue follow-ups
+
 router.get('/overdue', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.getOverdueFollowUps);
 
-// Get follow-ups by lead
+
 router.get('/lead/:leadId', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.getFollowUpsByLead);
 
-// Get follow-up by ID
+
 router.get('/:id', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.getFollowUpById);
 
 module.exports = router;
