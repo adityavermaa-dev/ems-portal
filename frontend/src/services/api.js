@@ -35,6 +35,7 @@ export const api = {
   updateUserStatus: (id, isActive) => request(`/api/users/${id}/status`, { method: "PATCH", body: { isActive } }),
   resetPassword: (id, newPassword) => request(`/api/users/${id}/reset-password`, { method: "PATCH", body: { newPassword } }),
   leads: (params) => request(`/api/leads${buildQuery(params)}`),
+  getLeadById: (id) => request(`/api/leads/${id}`),
   createLead: (body) => request("/api/leads", { method: "POST", body }),
   importLeads: (body) => request("/api/leads/import", { method: "POST", body }),
   updateLead: (id, body) => request(`/api/leads/${id}`, { method: "PUT", body }),

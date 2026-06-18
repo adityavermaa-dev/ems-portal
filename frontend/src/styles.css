@@ -592,7 +592,8 @@ td small {
 }
 
 .mobile-toggle,
-.mobile-close {
+.mobile-close,
+.mobile-back {
   display: none;
   background: transparent;
   border: none;
@@ -617,7 +618,8 @@ td small {
     grid-template-columns: 1fr;
   }
   
-  .mobile-toggle {
+  .mobile-toggle,
+  .mobile-back {
     display: block;
   }
 
@@ -663,9 +665,26 @@ td small {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .messages-layout,
   .two-col {
     grid-template-columns: 1fr;
+  }
+
+  .messages-layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .messages-layout .thread {
+    display: none;
+  }
+
+  .messages-layout.has-active-chat .conversation-list {
+    display: none;
+  }
+
+  .messages-layout.has-active-chat .thread {
+    display: grid;
+    flex: 1;
   }
 }
 

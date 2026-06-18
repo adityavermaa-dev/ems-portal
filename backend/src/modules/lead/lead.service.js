@@ -149,7 +149,7 @@ async function getLeadById(id, userId, role) {
                 orderBy: { createdAt: 'desc' }
             },
             notes: {
-                include: { creator: { select: { id: true, name: true, role: true } } },
+                include: { creator: { select: { id: true, name: true } } },
                 orderBy: { createdAt: 'desc' }
             },
             tasks: {
@@ -312,7 +312,7 @@ async function addNote(leadId, content, creatorId) {
                 content,
                 createdBy: creatorId
             },
-            include: { creator: { select: { id: true, name: true, role: true } } }
+            include: { creator: { select: { id: true, name: true } } }
         });
         await logActivity(creatorId, 'ADD_NOTE', 'Lead', leadId, null, tx);
         return note;
@@ -322,7 +322,7 @@ async function addNote(leadId, content, creatorId) {
 async function getNotes(leadId) {
     return prisma.note.findMany({
         where: { leadId: Number(leadId) },
-        include: { creator: { select: { id: true, name: true, role: true } } },
+        include: { creator: { select: { id: true, name: true } } },
         orderBy: { createdAt: 'desc' }
     });
 }

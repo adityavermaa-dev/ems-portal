@@ -49,6 +49,9 @@ function initializeSocket(httpServer) {
         io.emit('user_online', { userId });
 
         
+        socket.emit('online_users', Array.from(onlineUsers.keys()));
+
+        
         socket.on('typing', (data) => {
             io.to(`user_${data.receiverId}`).emit('user_typing', {
                 userId,

@@ -53,3 +53,4 @@ process.on("SIGINT", async () => {
 });
 
 startServer();
+// restart nodemon again for socket
