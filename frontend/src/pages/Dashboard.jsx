@@ -84,7 +84,9 @@ export function Dashboard() {
         {user.role === "SUPER_ADMIN" && (
           <>
             <Metric label="Total Users" value={users.length} icon={Users} />
-            <Metric label="Total HR/BDE/Telesales" value={users.filter(u => ['HR', 'BDE', 'TELESALES'].includes(u.role)).length} icon={UserCheck} />
+            <Metric label="Total HR" value={users.filter(u => (u.role?.name || u.role) === 'HR').length} icon={UserCheck} />
+            <Metric label="Total BDE" value={users.filter(u => (u.role?.name || u.role) === 'BDE').length} icon={UserCheck} />
+            <Metric label="Total Telesales" value={users.filter(u => (u.role?.name || u.role) === 'TELESALES').length} icon={PhoneCall} />
             <Metric label="Active Leads" value={leads.filter(l => !['CONVERTED', 'LOST'].includes(l.status)).length} icon={TrendingUp} />
             <Metric label="Follow-Up Summary" value={data.upcoming.length + data.overdue.length} detail={`${data.overdue.length} overdue`} icon={Calendar} tone={data.overdue.length > 0 ? "danger" : "info"} />
             <Metric label="Attendance Overview" value={presentToday} detail={`${insideOffice} inside office`} icon={UserCheck} />
