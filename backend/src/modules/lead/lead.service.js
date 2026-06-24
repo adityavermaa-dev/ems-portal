@@ -90,7 +90,11 @@ async function getLeads(userId, role, query = {}) {
     }
 
     if (query.status) {
-        where.status = query.status;
+        if (query.status === 'OTHERS') {
+            where.status = { notIn: ['NEW', 'INTERESTED', 'NOT_INTERESTED'] };
+        } else {
+            where.status = query.status;
+        }
     }
 
     if (query.assignedTo && (role === 'SUPER_ADMIN' || role === 'HR')) {

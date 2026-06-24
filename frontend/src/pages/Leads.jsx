@@ -10,7 +10,7 @@ import { Pagination } from "../components/Pagination";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 
 export function Leads() {
-  const { user, isAdmin, setNotice } = useOutletContext();
+  const { user, isAdmin, isHR, setNotice } = useOutletContext();
   const [filters, setFilters] = useState({ search: "", status: "", assignedTo: "" });
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
@@ -109,9 +109,25 @@ export function Leads() {
         </RowActions>
       } />
       <div className="filters">
-        <input placeholder="Search name, phone, email" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} />
-        <Select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} options={["", ...LEAD_STATUSES]} placeholder="All statuses" />
-        {isAdmin && <Select value={filters.assignedTo} onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })} options={["", ...employeeUsers.map((item) => item.id)]} labels={Object.fromEntries(employeeUsers.map((item) => [item.id, item.name]))} placeholder="All assignees" />}
+        <input placeholder="Search name, phone, email" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })} />
+        {isAdmin && <Select value={filters.assignedTo} onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value, page: 1 })} options={["", ...employeeUsers.map((item) => item.id)]} labels={Object.fromEntries(employeeUsers.map((item) => [item.id, item.name]))} placeholder="All assignees" />}
+      </div>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        {[
+          { label: "All", value: "" },
+          { label: "New", value: "NEW" },
+          { label: "Interested", value: "INTERESTED" },
+          { label: "Not Interested", value: "NOT_INTERESTED" },
+          { label: "Others", value: "OTHERS" }
+        ].map(tab => (
+          <button 
+            key={tab.label} 
+            className={filters.status === tab.value ? "primary" : "secondary"} 
+            onClick={() => setFilters({ ...filters, status: tab.value, page: 1 })}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
       {isAdmin && (
         <form className="form-grid" onSubmit={createLead}>
@@ -148,7 +164,7 @@ export function Leads() {
           <RowActions>
             <button onClick={() => loadLeadDetails(lead)}>Details</button>
             <Select value={lead.status} onChange={(e) => updateStatus(lead, e.target.value)} options={LEAD_STATUSES} />
-            {isAdmin && <button onClick={() => setSelected(lead)}>Assign</button>}
+            {isHR && <button onClick={() => setSelected(lead)}>Assign</button>}
           </RowActions>,
         ])}
       />

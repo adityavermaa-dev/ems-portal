@@ -9,7 +9,7 @@ import { PanelHeader, Select, DataTable, Badge, RowActions, Modal, Loading, Erro
 import { Pagination } from "../components/Pagination";
 
 export function Tasks() {
-  const { user, isAdmin, setNotice } = useOutletContext();
+  const { user, isAdmin, isHR, setNotice } = useOutletContext();
   const [filters, setFilters] = useState({ status: "", assignedTo: "", isOverdue: "" });
   const [page, setPage] = useState(1);
   const { data, loading, error, refresh } = useAsync(() => api.tasks({ ...filters, page, limit: 10 }), [filters.status, filters.assignedTo, filters.isOverdue, page]);
@@ -61,7 +61,7 @@ export function Tasks() {
         {isAdmin && <Select value={filters.assignedTo} onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })} options={["", ...employeeUsers.map((item) => item.id)]} labels={Object.fromEntries(employeeUsers.map((item) => [item.id, item.name]))} placeholder="All assignees" />}
         <Select value={filters.isOverdue} onChange={(e) => setFilters({ ...filters, isOverdue: e.target.value })} options={["", "true"]} labels={{ true: "Overdue only" }} placeholder="All due dates" />
       </div>
-      {isAdmin && (
+      {isHR && (
         <form className="form-grid" onSubmit={createTask}>
           <label>Title<input value={form.values.title} onChange={(e) => form.set("title", e.target.value)} required /></label>
           <label>Assignee<Select value={form.values.assignedTo} onChange={(e) => form.set("assignedTo", e.target.value)} options={employeeUsers.map((item) => item.id)} labels={Object.fromEntries(employeeUsers.map((item) => [item.id, `${item.name} (${titleCase(item.role?.name)})`]))} required /></label>

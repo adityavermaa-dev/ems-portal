@@ -52,6 +52,7 @@ export function AppShell() {
   if (!user) return null;
 
   const isAdmin = ["SUPER_ADMIN", "HR"].includes(user.role);
+  const isHR = user.role === "HR";
   const canManageUsers = user.role === "SUPER_ADMIN";
   const canUseAttendanceActions = EMPLOYEE_ROLES.includes(user.role);
 
@@ -125,7 +126,7 @@ export function AppShell() {
           </div>
         </header>
         <main>
-          <Outlet context={{ user, isAdmin, canManageUsers, canUseAttendanceActions, setNotice }} />
+          <Outlet context={{ user, isAdmin, isHR, canManageUsers, canUseAttendanceActions, setNotice }} />
         </main>
       </div>
     </div>
