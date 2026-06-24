@@ -16,8 +16,12 @@ export function AppShell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchUnreadCount = () => {
     api.unreadCount().then(res => setUnreadCount(res.unreadCount || 0)).catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
   }, []);
 
   useEffect(() => {
@@ -63,6 +67,7 @@ export function AppShell() {
     ["/followups", "Follow-Ups"],
     ["/tasks", "Tasks"],
     ["/attendance", "Attendance"],
+    ["/leaves", "Leaves"],
     ["/messages", "Messages"],
     ["/notifications", "Notifications"],
     ["/activity", "Activity"],
@@ -126,7 +131,7 @@ export function AppShell() {
           </div>
         </header>
         <main>
-          <Outlet context={{ user, isAdmin, isHR, canManageUsers, canUseAttendanceActions, setNotice }} />
+          <Outlet context={{ user, isAdmin, isHR, canManageUsers, canUseAttendanceActions, setNotice, fetchUnreadCount }} />
         </main>
       </div>
     </div>

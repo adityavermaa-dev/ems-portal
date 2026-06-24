@@ -27,6 +27,14 @@ export function toInputDateTime(value) {
   return date.toISOString().slice(0, 16);
 }
 
+export function toInputDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 10);
+}
+
 export function buildQuery(params = {}) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

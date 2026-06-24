@@ -40,6 +40,19 @@ enum NotificationType {
   SUCCESS
 }
 
+enum LeaveType {
+  SICK
+  CASUAL
+  ANNUAL
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Role {
   id   Int    @id @default(autoincrement())
   name String @unique
@@ -78,6 +91,10 @@ model User {
 
   // Notifications
   notifications Notification[]
+
+  // Leaves
+  leaveRequests LeaveRequest[] @relation("LeaveRequests")
+  approvedLeaves LeaveRequest[] @relation("ApprovedLeaves")
 
   // Audit Logs
   activityLogs ActivityLog[]
@@ -254,6 +271,26 @@ model Note {
 
   createdBy Int
   creator   User @relation("CreatedNotes", fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LeaveRequest {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation("LeaveRequests", fields: [userId], references: [id])
+
+  type LeaveType
+  status LeaveStatus @default(PENDING)
+
+  startDate DateTime
+  endDate   DateTime
+  reason    String
+
+  reviewerId Int?
+  reviewer   User? @relation("ApprovedLeaves", fields: [reviewerId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

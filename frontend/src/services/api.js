@@ -43,6 +43,7 @@ export const api = {
   assignLead: (id, assignedTo) => request(`/api/leads/${id}/assign`, { method: "PATCH", body: { assignedTo } }),
   createLeadNote: (id, body) => request(`/api/leads/${id}/notes`, { method: "POST", body }),
   getLeadNotes: (id) => request(`/api/leads/${id}/notes`),
+  followUpsAll: () => request("/api/follow-ups"),
   followUpsUpcoming: () => request("/api/follow-ups/upcoming"),
   followUpsOverdue: () => request("/api/follow-ups/overdue"),
   followUpsByLead: (leadId) => request(`/api/follow-ups/lead/${leadId}`),
@@ -68,4 +69,8 @@ export const api = {
   markConversationRead: (id) => request(`/api/messages/conversation/${id}/read`, { method: "PATCH" }),
   activityLogs: (path = "/api/activity-logs/my", params) => request(`${path}${buildQuery(params)}`),
   analytics: () => request("/api/analytics"),
+  leaves: () => request("/api/leaves"),
+  myLeaves: () => request("/api/leaves/my"),
+  createLeave: (body) => request("/api/leaves", { method: "POST", body }),
+  updateLeaveStatus: (id, status) => request(`/api/leaves/${id}/status`, { method: "PATCH", body: { status } }),
 };

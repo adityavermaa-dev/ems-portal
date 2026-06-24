@@ -53,4 +53,4 @@ process.on("SIGINT", async () => {
 });
 
 startServer();
-// restart nodemon again for socket
+// restart nodemon to load generated prisma client

@@ -107,7 +107,7 @@ export function Dashboard() {
           <>
             <Metric label="Assigned Tasks" value={tasks.length} detail={`${dueTodayTasks} due today`} icon={Clock} />
             <Metric label="Assigned Leads" value={leads.length} icon={Users} />
-            <Metric label="Lead Status Counters" value={leads.length > 0 ? leads.length : 0} detail={`${leadCounts.HOT || 0} Hot, ${leadCounts.INTERESTED || 0} Interested`} icon={TrendingUp} />
+            <Metric label="Lead Status Counters" value={leads.length > 0 ? leads.length : 0} detail={`${leadCounts.NEW || 0} New, ${leadCounts.INTERESTED || 0} Interested`} icon={TrendingUp} />
             <Metric label="Follow-Up Reminder" value={data.upcoming.length + data.overdue.length} detail={`${data.overdue.length} overdue`} icon={Bell} tone={data.overdue.length > 0 ? "danger" : "info"} />
             <Metric label="Completed Tasks" value={completedTodayTasks} icon={CheckCircle} tone="success" />
           </>

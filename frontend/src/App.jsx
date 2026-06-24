@@ -12,6 +12,7 @@ const Leads = React.lazy(() => import("./pages/Leads").then(m => ({ default: m.L
 const FollowUps = React.lazy(() => import("./pages/FollowUps").then(m => ({ default: m.FollowUps })));
 const Tasks = React.lazy(() => import("./pages/Tasks").then(m => ({ default: m.Tasks })));
 const Attendance = React.lazy(() => import("./pages/Attendance").then(m => ({ default: m.Attendance })));
+const Leave = React.lazy(() => import("./pages/Leave").then(m => ({ default: m.Leave })));
 const Messages = React.lazy(() => import("./pages/Messages").then(m => ({ default: m.Messages })));
 const Notifications = React.lazy(() => import("./pages/Notifications").then(m => ({ default: m.Notifications })));
 const Activity = React.lazy(() => import("./pages/Activity").then(m => ({ default: m.Activity })));
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="followups" element={<FollowUps />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="attendance" element={<Attendance />} />
+          <Route path="leaves" element={<Leave />} />
           <Route path="messages" element={<Messages />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="activity" element={<Activity />} />

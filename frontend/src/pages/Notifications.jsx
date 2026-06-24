@@ -8,7 +8,7 @@ import { PanelHeader, Select, DataTable, Badge, RowActions, Loading, ErrorState 
 import { Pagination } from "../components/Pagination";
 
 export function Notifications() {
-  const { setNotice } = useOutletContext();
+  const { setNotice, fetchUnreadCount } = useOutletContext();
   const [filters, setFilters] = useState({ isRead: "", type: "" });
   const [page, setPage] = useState(1);
   const { data, loading, error, refresh } = useAsync(() => api.notifications({ ...filters, page, limit: 10 }), [filters.isRead, filters.type, page]);
@@ -17,6 +17,7 @@ export function Notifications() {
     await api.markAllNotificationsRead();
     setNotice("Notifications marked read");
     refresh();
+    if (fetchUnreadCount) fetchUnreadCount();
   }
 
   if (loading) return <Loading />;
@@ -40,7 +41,7 @@ export function Notifications() {
           item.isRead ? "Read" : "Unread",
           formatDate(item.createdAt, true),
           <RowActions>
-            {!item.isRead && <button onClick={async () => { await api.markNotificationRead(item.id); refresh(); }}>Read</button>}
+            {!item.isRead && <button onClick={async () => { await api.markNotificationRead(item.id); refresh(); if (fetchUnreadCount) fetchUnreadCount(); }}>Read</button>}
             <button onClick={async () => { await api.deleteNotification(item.id); refresh(); }}>Delete</button>
           </RowActions>,
         ])}

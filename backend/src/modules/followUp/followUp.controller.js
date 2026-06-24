@@ -65,10 +65,23 @@ async function getOverdueFollowUps(req, res) {
     }
 }
 
+async function getAllFollowUps(req, res) {
+    try {
+        const followUps = await followUpService.getAllFollowUps(
+            req.user.userId,
+            req.user.role
+        );
+        res.json({ success: true, data: followUps });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
     createFollowUp,
     getFollowUpsByLead,
     getFollowUpById,
     getUpcomingFollowUps,
-    getOverdueFollowUps
+    getOverdueFollowUps,
+    getAllFollowUps
 };

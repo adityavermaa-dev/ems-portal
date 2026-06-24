@@ -38,6 +38,8 @@ button {
 
 button:hover {
   border-color: #738997;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 button.primary {
@@ -270,8 +272,16 @@ main {
 .metric,
 .table-panel {
   border: 1px solid #d9e3e7;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #ffffff;
+  box-shadow: 0 2px 8px rgba(10, 24, 36, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric:hover,
+.table-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(10, 24, 36, 0.08);
 }
 
 .metric {
@@ -308,10 +318,46 @@ main {
   border-top: 4px solid #2a70a5;
 }
 
-.two-col {
+.two-col,
+.split-layout {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 24px;
+}
+
+.two-col {
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+@media (min-width: 900px) {
+  .split-layout {
+    grid-template-columns: 350px 1fr;
+    align-items: start;
+  }
+}
+
+.lead-list-item {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-bottom: 1px solid #eef2f5;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.lead-list-item:hover {
+  background-color: #f7f9fa;
+}
+.lead-list-item.active {
+  background-color: #e4f1f5;
+  border-left: 4px solid #24505c;
+}
+.lead-list-item strong {
+  font-size: 1rem;
+  color: #1a2530;
+  margin-bottom: 4px;
+}
+.lead-list-item span {
+  font-size: 0.85rem;
+  color: #53636e;
 }
 
 .two-col > * {
@@ -395,9 +441,11 @@ td small {
   align-items: center;
   min-height: 28px;
   border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 0.8rem;
-  font-weight: 800;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: #24505c;
   background: #e4f1f5;
 }

@@ -7,6 +7,8 @@ const followUpController = require('./followUp.controller');
 router.use(authMiddleware);
 
 
+router.get('/', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.getAllFollowUps);
+
 router.post('/', authorize('SUPER_ADMIN', 'HR', 'BDE', 'TELESALES'), followUpController.createFollowUp);
 
 

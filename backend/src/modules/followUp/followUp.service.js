@@ -176,10 +176,27 @@ async function getOverdueFollowUps(userId, role) {
     });
 }
 
+async function getAllFollowUps(userId, role) {
+    const where = {};
+    if (role === 'BDE' || role === 'TELESALES') {
+        where.lead = { assignedTo: userId };
+    }
+    return prisma.followUp.findMany({
+        where,
+        include: {
+            lead: { select: { id: true, name: true, phone: true, assignedTo: true } },
+            creator: { select: { id: true, name: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 100
+    });
+}
+
 module.exports = {
     createFollowUp,
     getFollowUpsByLead,
     getFollowUpById,
     getUpcomingFollowUps,
-    getOverdueFollowUps
+    getOverdueFollowUps,
+    getAllFollowUps
 };
