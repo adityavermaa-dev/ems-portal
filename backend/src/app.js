@@ -22,6 +22,8 @@ const notificationRoutes = require("./modules/notification/notification.routes")
 const activityLogRoutes = require("./modules/activityLog/activityLog.routes");
 const analyticsRoutes = require("./modules/analytics/analytics.routes");
 const leaveRoutes = require("./modules/leave/leave.routes");
+const salesTargetRoutes = require("./modules/salesTarget/salesTarget.routes");
+const chatRoutes = require("./modules/chat/chat.routes");
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
@@ -46,6 +48,8 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/leaves", leaveRoutes);
+app.use("/api/sales-targets", salesTargetRoutes);
+app.use("/api/chat", chatRoutes);
 
 
 app.get("/", (req, res) => {

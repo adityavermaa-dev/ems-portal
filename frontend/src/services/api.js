@@ -73,4 +73,9 @@ export const api = {
   myLeaves: () => request("/api/leaves/my"),
   createLeave: (body) => request("/api/leaves", { method: "POST", body }),
   updateLeaveStatus: (id, status) => request(`/api/leaves/${id}/status`, { method: "PATCH", body: { status } }),
+  salesTargets: (params) => request(`/api/sales-targets${buildQuery(params)}`),
+  setSalesTarget: (body) => request("/api/sales-targets", { method: "POST", body }),
+  salesTargetStats: (params) => request(`/api/sales-targets/dashboard-stats${buildQuery(params)}`),
+  salesTargetLeaderboard: (params) => request(`/api/sales-targets/leaderboard${buildQuery(params)}`),
+  sendChatMessage: (body) => request("/api/chat", { method: "POST", body }),
 };

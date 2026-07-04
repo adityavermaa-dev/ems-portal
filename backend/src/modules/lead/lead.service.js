@@ -4,6 +4,7 @@ const { createNotification } = require('../../utils/notificationHelper');
 const { validateCreateLead, validateLeadStatus } = require('../../utils/validators/lead.validator');
 const fs = require('fs');
 const csv = require('csv-parser');
+const salesTargetService = require('../salesTarget/salesTarget.service');
 
 async function createLead(data, createdBy) {
     validateCreateLead(data);
@@ -276,7 +277,7 @@ async function assignLead(id, assignedTo, userId, io) {
     });
 }
 
-async function updateLeadStatus(id, status, userId, role) {
+async function updateLeadStatus(id, status, userId, role, io) {
     const lead = await prisma.lead.findUnique({ where: { id: Number(id) } });
 
     if (!lead) {
@@ -302,6 +303,19 @@ async function updateLeadStatus(id, status, userId, role) {
         });
 
         await logActivity(userId, 'UPDATE_LEAD_STATUS', 'Lead', updatedLead.id, null, tx);
+
+        // Milestone Check for Targets
+        if (status === 'CONVERTED' && updatedLead.assignedTo) {
+            const now = new Date();
+            const stats = await salesTargetService.getDashboardStats(updatedLead.assignedTo, now.getMonth() + 1, now.getFullYear());
+            if (stats.target) {
+                if (stats.progress === 100) {
+                    await createNotification(updatedLead.assignedTo, 'Target Achieved', 'Congratulations! You have achieved your monthly sales target.', 'SUCCESS', io, tx);
+                } else if (stats.progress >= 80 && stats.progress - ((1/stats.target)*100) < 80) {
+                    await createNotification(updatedLead.assignedTo, 'Almost There!', `Great job! You're at ${stats.progress}%. Just ${stats.remaining} more to go!`, 'INFO', io, tx);
+                }
+            }
+        }
 
         return updatedLead;
     });

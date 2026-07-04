@@ -6,6 +6,7 @@ import { EMPLOYEE_ROLES } from "../utils/constants";
 import { useSocket } from "../hooks/useSocket";
 import { Bell, Menu, X } from "lucide-react";
 import { api } from "../services/api";
+import { ChatWidget } from "../components/Chatbot/ChatWidget";
 
 export function AppShell() {
   const { user, logout } = useAuthStore();
@@ -69,6 +70,7 @@ export function AppShell() {
     ["/attendance", "Attendance"],
     ["/leaves", "Leaves"],
     ["/messages", "Messages"],
+    ...(isAdmin ? [["/sales-targets", "Sales Targets"]] : []),
     ["/notifications", "Notifications"],
     ["/activity", "Activity"],
     ...(canManageUsers ? [["/users", "Users"]] : []),
@@ -134,6 +136,7 @@ export function AppShell() {
           <Outlet context={{ user, isAdmin, isHR, canManageUsers, canUseAttendanceActions, setNotice, fetchUnreadCount }} />
         </main>
       </div>
+      <ChatWidget />
     </div>
   );
 }

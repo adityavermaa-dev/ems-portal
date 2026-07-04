@@ -59,10 +59,10 @@ export function RowActions({ children }) {
   return <div className="row-actions">{children}</div>;
 }
 
-export function Modal({ title, children, onClose }) {
+export function Modal({ title, children, onClose, className = "", style }) {
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal">
+      <div className={cx("modal", className)} style={style}>
         <PanelHeader title={title} action={<button onClick={onClose}>Close</button>} />
         {children}
       </div>

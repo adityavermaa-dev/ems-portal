@@ -96,6 +96,10 @@ model User {
   leaveRequests LeaveRequest[] @relation("LeaveRequests")
   approvedLeaves LeaveRequest[] @relation("ApprovedLeaves")
 
+  // Targets
+  salesTargets SalesTarget[] @relation("SalesTargets")
+  assignedTargets SalesTarget[] @relation("AssignedTargets")
+
   // Audit Logs
   activityLogs ActivityLog[]
 
@@ -294,4 +298,24 @@ model LeaveRequest {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model SalesTarget {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation("SalesTargets", fields: [userId], references: [id])
+
+  assignedById Int
+  assignedBy   User @relation("AssignedTargets", fields: [assignedById], references: [id])
+
+  month Int
+  year  Int
+
+  targetConversions Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, month, year])
 }

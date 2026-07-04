@@ -72,7 +72,8 @@ async function updateLeadStatus(req, res) {
         if (!status) {
             return res.status(400).json({ success: false, message: 'Status is required' });
         }
-        const lead = await leadService.updateLeadStatus(req.params.id, status, req.user.userId, req.user.role);
+        const io = req.app.get('io');
+        const lead = await leadService.updateLeadStatus(req.params.id, status, req.user.userId, req.user.role, io);
         res.json({ success: true, data: lead });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });

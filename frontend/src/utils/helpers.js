@@ -19,6 +19,22 @@ export function formatDate(value, withTime = false) {
   }).format(date);
 }
 
+export function formatDuration(start, end) {
+  if (!start || !end) return "-";
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return "-";
+  
+  const diffMs = endDate.getTime() - startDate.getTime();
+  if (diffMs < 0) return "-";
+
+  const diffMins = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMins / 60);
+  const mins = diffMins % 60;
+  
+  return `${hours}h ${mins}m`;
+}
+
 export function toInputDateTime(value) {
   if (!value) return "";
   const date = new Date(value);

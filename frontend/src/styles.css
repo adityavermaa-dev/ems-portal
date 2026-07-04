@@ -360,6 +360,30 @@ main {
   color: #53636e;
 }
 
+.target-widget {
+  background: var(--panel-bg);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.progress-bar-container {
+  height: 20px;
+  background: #eef2f5;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+.progress-bar-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+.bg-danger { background-color: #ef4444; }
+.bg-warning { background-color: #f59e0b; }
+.bg-success { background-color: #10b981; }
+.bg-info { background-color: #3b82f6; }
+
 .two-col > * {
   min-width: 0;
 }
@@ -590,6 +614,12 @@ td small {
   place-items: center;
   padding: 20px;
   background: rgba(24, 38, 47, 0.45);
+}
+
+@media (min-width: 1081px) {
+  .modal-backdrop {
+    padding-left: 200px; /* Offset for the 260px sidebar */
+  }
 }
 
 .modal {

@@ -16,20 +16,22 @@ export function Dashboard() {
     const today = new Date().toISOString().split('T')[0];
     
     
-    const [leads, tasks, upcoming, overdue, attendance, notifications, activityLog] = await Promise.all([
+    const [leads, tasks, upcoming, overdue, attendance, notifications, activityLog, statsReq, leaderboardReq] = await Promise.all([
       api.leads({ limit: 100 }),
       api.tasks({ limit: 100 }),
       api.followUpsUpcoming(),
       api.followUpsOverdue(),
       isAdmin ? api.attendance({ limit: 100 }) : api.myAttendance({ limit: 100 }),
       api.unreadCount().catch(() => ({ unreadCount: 0 })),
-      api.activityLogs(isAdmin ? "/api/activity-logs" : "/api/activity-logs/my", { limit: 5 })
+      api.activityLogs(isAdmin ? "/api/activity-logs" : "/api/activity-logs/my", { limit: 5 }),
+      (!isAdmin) ? api.salesTargetStats().catch(() => null) : Promise.resolve(null),
+      api.salesTargetLeaderboard().catch(() => [])
     ]);
     
     let users = [];
     if (user.role === "SUPER_ADMIN") users = await api.users();
     
-    return { leads, tasks, upcoming, overdue, attendance, notifications, activityLog, users };
+    return { leads, tasks, upcoming, overdue, attendance, notifications, activityLog, users, stats: statsReq, leaderboard: leaderboardReq || [] };
   }, [user.role, isAdmin]);
 
   if (loading) return <Loading />;
@@ -59,6 +61,13 @@ export function Dashboard() {
   const barData = TASK_STATUSES.map((status) => ({ name: titleCase(status), Tasks: tasks.filter((task) => task.status === status).length }));
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
+  const getProgressClass = (p) => {
+    if (p < 30) return "bg-danger";
+    if (p < 70) return "bg-warning";
+    if (p < 100) return "bg-success";
+    return "bg-info";
+  };
+
   return (
     <section className="stack">
       <div className="hero-band">
@@ -79,6 +88,30 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {(!isAdmin && data.stats?.target) && (
+        <div className="target-widget">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div>
+              <h2 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>Monthly Sales Target</h2>
+              <p className="muted">{data.stats.converted} / {data.stats.target} Leads Converted</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <strong style={{ fontSize: '1.5rem', color: 'var(--text-color)' }}>{data.stats.progress}%</strong>
+            </div>
+          </div>
+          <div className="progress-bar-container">
+            <div 
+              className={`progress-bar-fill ${getProgressClass(data.stats.progress)}`} 
+              style={{ width: `${Math.min(data.stats.progress, 100)}%` }} 
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+            <span style={{ color: '#ef4444' }}><strong>{data.stats.remaining}</strong> Remaining</span>
+            <span className="muted"><strong>{data.stats.daysLeft}</strong> Days Left</span>
+          </div>
+        </div>
+      )}
 
       <div className="metric-grid">
         {user.role === "SUPER_ADMIN" && (
@@ -145,6 +178,31 @@ export function Dashboard() {
             </ResponsiveContainer>
           ) : <p className="muted">No task data available</p>}
         </div>
+      </div>
+
+      <div className="table-panel">
+        <PanelHeader title="Top Performers (Leaderboard)" />
+        {data.leaderboard.length === 0 ? <EmptyState text="No targets set this month" /> : (
+          <div className="list">
+            {data.leaderboard.slice(0, 5).map((u, i) => (
+              <article key={u.userId} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '24px', textAlign: 'center', fontWeight: 'bold', color: i === 0 ? '#f59e0b' : '#53636e' }}>
+                  #{i + 1}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <strong>{u.name}</strong>
+                  <div className="progress-bar-container" style={{ height: '6px', margin: '6px 0' }}>
+                    <div className={`progress-bar-fill ${getProgressClass(u.progress)}`} style={{ width: `${Math.min(u.progress, 100)}%` }} />
+                  </div>
+                </div>
+                <div style={{ width: '80px', textAlign: 'right' }}>
+                  <strong>{u.converted}/{u.target}</strong>
+                  <small style={{ display: 'block' }}>{u.progress}%</small>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="two-col">

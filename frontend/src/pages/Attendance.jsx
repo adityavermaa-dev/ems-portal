@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { api } from "../services/api";
 import { useAsync } from "../hooks/useAsync";
-import { titleCase, formatDate, downloadCsv } from "../utils/helpers";
+import { titleCase, formatDate, formatDuration, downloadCsv } from "../utils/helpers";
 import { PanelHeader, EmptyState, DataTable, Badge, Loading, ErrorState, Select } from "../components/ui";
 import { Pagination } from "../components/Pagination";
 
@@ -59,13 +59,14 @@ export function Attendance() {
         {canAct && <button onClick={() => withLocation("out")}>Check out</button>}
       </div>
       <DataTable
-        columns={["Employee", "Date", "Status", "Check in", "Check out", "Location"]}
+        columns={["Employee", "Date", "Status", "Check in", "Check out", "Duration", "Location"]}
         rows={records.map((record) => [
           record.user?.name || "Me",
           formatDate(record.date),
           <Badge tone={record.status === "PRESENT" ? "success" : "warning"}>{titleCase(record.status)}</Badge>,
           formatDate(record.checkIn, true),
           formatDate(record.checkOut, true),
+          formatDuration(record.checkIn, record.checkOut),
           record.isInsideOffice === null || record.isInsideOffice === undefined ? "-" : <Badge tone={record.isInsideOffice ? "success" : "danger"}>{record.isInsideOffice ? "Inside" : `Outside ${Math.round(record.officeDistanceMeters || 0)}m`}</Badge>,
         ])}
       />

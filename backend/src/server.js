@@ -53,4 +53,4 @@ process.on("SIGINT", async () => {
 });
 
 startServer();
-// restart nodemon to load generated prisma client
+// restart nodemon to load generated prisma client with salesTarget, hard restart 2
