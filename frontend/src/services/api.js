@@ -1,6 +1,6 @@
 import { buildQuery } from "../utils/helpers";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "https://ems-portal-h3vq.onrender.com";
 
 async function request(path, options = {}) {
   const isFormData = options.body instanceof FormData;
