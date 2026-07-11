@@ -6,11 +6,16 @@ async function login(req, res) {
 
         const result = await authService.login(email, password);
 
-        res.cookie("accessToken", result.token, {
+        const isProduction = process.env.NODE_ENV === "production";
+        const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
+        };
+
+        res.cookie("accessToken", result.token, {
+            ...cookieOptions
         });
 
         res.status(200).json({ success: true, user: result.user });
@@ -31,7 +36,12 @@ async function logout(req, res) {
         }
     }
 
-    res.clearCookie("accessToken");
+    const isProduction = process.env.NODE_ENV === "production";
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax"
+    });
     res.json({ success: true, message: "Logged out successfully" });
 }
 

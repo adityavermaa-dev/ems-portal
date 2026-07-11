@@ -3,12 +3,16 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+if (typeof process.setDefaultResultOrder === "function") {
+  process.setDefaultResultOrder("ipv4first");
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: process.env["DATABASE_URL"]?.replace("&channel_binding=require", ""),
   },
 });
